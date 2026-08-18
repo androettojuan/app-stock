@@ -1,0 +1,106 @@
+import { useEffect, useState } from 'react'
+import { useAuth } from './hooks/useAuth'
+import { negociosDelUsuario } from './data/negocios'
+import { escucharProductos } from './data/productos'
+import { escucharMovimientos } from './data/movimientos'
+import { Login } from './components/Login'
+import { SelectorNegocio } from './components/SelectorNegocio'
+import { Productos } from './components/Productos'
+import { Movimientos } from './components/Movimientos'
+import { usaEmulador } from './firebase/config'
+import type { Movimiento, Negocio, Producto } from './types'
+
+const CLAVE_NEGOCIO = 'app-stock:negocio'
+
+type Solapa = 'productos' | 'movimientos'
+
+export default function App() {
+  const { usuario, cargando, entrar, salir } = useAuth()
+  const [negocios, setNegocios] = useState<Negocio[] | null>(null)
+  const [negocio, setNegocio] = useState<Negocio | null>(null)
+  const [productos, setProductos] = useState<Producto[]>([])
+  const [movimientos, setMovimientos] = useState<Movimiento[]>([])
+  const [solapa, setSolapa] = useState<Solapa>('productos')
+  const [error, setError] = useState('')
+
+  // Al entrar, buscamos en qué negocios está el usuario y recordamos el último.
+  useEffect(() => {
+    if (!usuario?.email) {
+      setNegocios(null)
+      setNegocio(null)
+      return
+    }
+    let vigente = true
+    negociosDelUsuario(usuario.email)
+      .then((lista) => {
+        if (!vigente) return
+        setNegocios(lista)
+        const guardado = localStorage.getItem(CLAVE_NEGOCIO)
+        const elegido = lista.find((n) => n.id === guardado)
+        if (elegido) setNegocio(elegido)
+        else if (lista.length === 1) setNegocio(lista[0])
+      })
+      .catch(() => vigente && setError('No se pudieron cargar los negocios'))
+    return () => { vigente = false }
+  }, [usuario])
+
+  useEffect(() => {
+    if (!negocio) return
+    localStorage.setItem(CLAVE_NEGOCIO, negocio.id)
+    const corta = [
+      escucharProductos(negocio.id, setProductos, () => setError('No se pudieron leer los productos')),
+      escucharMovimientos(negocio.id, setMovimientos, () => setError('No se pudieron leer los movimientos')),
+    ]
+    return () => corta.forEach((f) => f())
+  }, [negocio])
+
+  if (cargando) return <div className="cargando">Cargando…</div>
+  if (!usuario) return <Login entrar={entrar} />
+
+  function cambiarNegocio() {
+    localStorage.removeItem(CLAVE_NEGOCIO)
+    setNegocio(null)
+    setProductos([])
+    setMovimientos([])
+  }
+
+  return (
+    <div className="app">
+      <header>
+        <div>
+          <h1>{negocio?.nombre ?? 'app-stock'}</h1>
+          {usaEmulador && <span className="tag emulador">emulador</span>}
+        </div>
+        <div className="header-acciones">
+          <span className="dato">{usuario.email}</span>
+          {negocio && negocios && negocios.length > 1 && (
+            <button className="secundario" onClick={cambiarNegocio}>Cambiar negocio</button>
+          )}
+          <button className="secundario" onClick={salir}>Salir</button>
+        </div>
+      </header>
+
+      {error && <p className="error">{error}</p>}
+
+      {!negocio ? (
+        negocios === null
+          ? <div className="cargando">Buscando tus negocios…</div>
+          : <SelectorNegocio negocios={negocios} onElegir={setNegocio} />
+      ) : (
+        <main>
+          <nav className="tabs">
+            <button className={solapa === 'productos' ? 'activo' : ''} onClick={() => setSolapa('productos')}>
+              Productos
+            </button>
+            <button className={solapa === 'movimientos' ? 'activo' : ''} onClick={() => setSolapa('movimientos')}>
+              Movimientos
+            </button>
+          </nav>
+          {solapa === 'productos'
+            ? <Productos negocioId={negocio.id} productos={productos} usuario={usuario.email ?? ''} />
+            : <Movimientos movimientos={movimientos} />}
+        </main>
+      )}
+    </div>
+  )
+}

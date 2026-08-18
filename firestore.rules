@@ -1,0 +1,73 @@
+rules_version = '2';
+
+// Modelo multi-negocio. Todos los datos de un negocio viven bajo negocios/{negocioId}:
+//   negocios/{negocioId}                    { nombre, rubro?, activo, creado }
+//   negocios/{negocioId}/miembros/{email}   { email, nombre?, rol, creado }
+//   negocios/{negocioId}/productos/{id}     { nombre, sku?, categoria?, unidad,
+//                                             stock, minimo, costo, precio, activo, actualizado }
+//   negocios/{negocioId}/movimientos/{id}   { productoId, nombre, tipo: 'entrada'|'salida'|'ajuste',
+//                                             cantidad, costo?, motivo?, usuario, fecha, ts }
+//
+// Acceso:
+//   - Miembro del negocio (existe su email en `miembros`): puede todo dentro de
+//     su negocio, salvo dar de alta/baja miembros y borrar el negocio.
+//   - Super admin (existe su email en `superAdmins`): crea negocios y administra
+//     los miembros de cada uno. La colección `superAdmins` no se escribe desde
+//     la app: se carga a mano desde la consola de Firebase.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function userEmail() {
+      return request.auth != null ? request.auth.token.email : '';
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/superAdmins/$(userEmail()));
+    }
+
+    function isMiembro(negocioId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/negocios/$(negocioId)/miembros/$(userEmail()));
+    }
+
+    // Cada usuario puede leer solo su propia entrada (para saber si es super
+    // admin). El alta/baja se hace desde la consola, nunca desde la app.
+    match /superAdmins/{docEmail} {
+      allow read: if request.auth != null && userEmail() == docEmail;
+      allow write: if false;
+    }
+
+    // Necesario para la consulta de collection group con la que la app averigua
+    // en qué negocios está el usuario: cada uno solo ve sus propias membresías.
+    match /{path=**}/miembros/{docEmail} {
+      allow read: if request.auth != null && resource.data.email == userEmail();
+    }
+
+    match /negocios/{negocioId} {
+      allow read: if isMiembro(negocioId) || isSuperAdmin();
+      allow create, delete: if isSuperAdmin();
+      // El negocio edita sus datos de presentación; el resto (activo, creado)
+      // queda reservado al super admin.
+      allow update: if isSuperAdmin()
+        || (isMiembro(negocioId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['nombre', 'rubro']));
+
+      match /miembros/{docEmail} {
+        allow read: if isMiembro(negocioId) || isSuperAdmin();
+        allow write: if isSuperAdmin();
+      }
+
+      match /productos/{productoId} {
+        allow read, write: if isMiembro(negocioId) || isSuperAdmin();
+      }
+
+      // Los movimientos son un histórico: se crean y no se editan.
+      match /movimientos/{movimientoId} {
+        allow read, create: if isMiembro(negocioId) || isSuperAdmin();
+        allow update: if false;
+        allow delete: if isSuperAdmin();
+      }
+    }
+  }
+}
