@@ -2,18 +2,22 @@ import { useEffect, useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useTema } from './hooks/useTema'
 import { negociosDelUsuario } from './data/negocios'
+import { crearNegocio, esSuperAdmin } from './data/admin'
 import { escucharProductos } from './data/productos'
 import { escucharMovimientos } from './data/movimientos'
 import { Login } from './components/Login'
 import { SelectorNegocio } from './components/SelectorNegocio'
 import { Productos } from './components/Productos'
 import { Movimientos } from './components/Movimientos'
+import { Miembros } from './components/Miembros'
+import { FormNegocio } from './components/FormNegocio'
+import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
 import type { Movimiento, Negocio, Producto } from './types'
 
 const CLAVE_NEGOCIO = 'app-stock:negocio'
 
-type Solapa = 'productos' | 'movimientos'
+type Solapa = 'productos' | 'movimientos' | 'miembros'
 
 export default function App() {
   const { usuario, cargando, entrar, salir } = useAuth()
@@ -23,6 +27,8 @@ export default function App() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [solapa, setSolapa] = useState<Solapa>('productos')
+  const [superAdmin, setSuperAdmin] = useState(false)
+  const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [error, setError] = useState('')
 
   // Al entrar, buscamos en qué negocios está el usuario y recordamos el último.
@@ -30,10 +36,13 @@ export default function App() {
     if (!usuario?.email) {
       setNegocios(null)
       setNegocio(null)
+      setSuperAdmin(false)
       return
     }
     let vigente = true
-    negociosDelUsuario(usuario.email)
+    const email = usuario.email
+    esSuperAdmin(email).then((es) => vigente && setSuperAdmin(es))
+    negociosDelUsuario(email)
       .then((lista) => {
         if (!vigente) return
         setNegocios(lista)
@@ -58,6 +67,17 @@ export default function App() {
 
   if (cargando) return <div className="cargando">Cargando…</div>
   if (!usuario) return <Login entrar={entrar} tema={tema} onCambiarTema={alternar} />
+
+  async function altaNegocio(datos: { nombre: string; rubro?: string }) {
+    const email = usuario?.email
+    if (!email) return
+    const id = await crearNegocio(datos, email)
+    const nuevo = { id, nombre: datos.nombre, rubro: datos.rubro, activo: true }
+    setNegocios((lista) => [...(lista ?? []), nuevo])
+    setNegocio(nuevo)
+    setSolapa('productos')
+    setCreandoNegocio(false)
+  }
 
   function cambiarNegocio() {
     localStorage.removeItem(CLAVE_NEGOCIO)
@@ -95,7 +115,14 @@ export default function App() {
       {!negocio ? (
         negocios === null
           ? <div className="cargando">Buscando tus negocios…</div>
-          : <SelectorNegocio negocios={negocios} onElegir={setNegocio} />
+          : (
+            <SelectorNegocio
+              negocios={negocios}
+              onElegir={setNegocio}
+              puedeCrear={superAdmin}
+              onCrear={() => setCreandoNegocio(true)}
+            />
+          )
       ) : (
         <main>
           <nav className="tabs">
@@ -105,11 +132,26 @@ export default function App() {
             <button className={solapa === 'movimientos' ? 'activo' : ''} onClick={() => setSolapa('movimientos')}>
               Movimientos
             </button>
+            {superAdmin && (
+              <button className={solapa === 'miembros' ? 'activo' : ''} onClick={() => setSolapa('miembros')}>
+                Miembros
+              </button>
+            )}
           </nav>
-          {solapa === 'productos'
-            ? <Productos negocioId={negocio.id} productos={productos} usuario={usuario.email ?? ''} />
-            : <Movimientos movimientos={movimientos} />}
+          {solapa === 'productos' && (
+            <Productos negocioId={negocio.id} productos={productos} usuario={usuario.email ?? ''} />
+          )}
+          {solapa === 'movimientos' && <Movimientos movimientos={movimientos} />}
+          {solapa === 'miembros' && superAdmin && (
+            <Miembros negocioId={negocio.id} usuario={usuario.email ?? ''} />
+          )}
         </main>
+      )}
+
+      {creandoNegocio && (
+        <Modal onCerrar={() => setCreandoNegocio(false)}>
+          <FormNegocio onGuardar={altaNegocio} onCancelar={() => setCreandoNegocio(false)} />
+        </Modal>
       )}
     </div>
   )

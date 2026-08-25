@@ -21,7 +21,8 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
 
 - Miembro de un negocio: puede todo dentro de ese negocio, menos dar de alta o
   baja miembros y borrar el negocio.
-- Super admin: crea negocios y administra sus miembros.
+- Super admin: crea negocios y administra sus miembros desde la app. Al crear
+  un negocio queda como miembro admin, si no nadie podría verlo.
 - Los movimientos son histórico: se crean y no se editan. El stock del producto
   se corrige en la misma transacción que registra el movimiento, así dos cargas
   simultáneas no se pisan.
@@ -56,8 +57,9 @@ Una sola vez, desde la consola del proyecto (`stock-app-b7a37`):
    se publique (`localhost` ya viene habilitado).
 3. **Firestore**: crear la base de datos.
 4. Dar de alta el primer super admin a mano: colección `superAdmins`, documento
-   con id igual al email, campo `email` con ese mismo valor. Desde ahí ya se
-   pueden crear negocios y agregar miembros.
+   con id igual al email, campo `email` con ese mismo valor. Es el único paso
+   que se hace desde la consola: el super admin ya crea negocios con **+
+   Negocio** y maneja los accesos desde la solapa **Miembros**.
 5. Publicar reglas e índices: `firebase deploy --only firestore:rules,firestore:indexes`.
 
 ## Deploy
