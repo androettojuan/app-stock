@@ -33,3 +33,13 @@ function formateador(moneda: string) {
 export function formatearImporte(valor: number, moneda: string) {
   return formateador(moneda).format(valor)
 }
+
+/** Un producto al que no le cargaron el dato: no hay importe que mostrar. */
+export function sinCargar(valor: number | undefined | null): valor is undefined {
+  return valor == null || !Number.isFinite(valor) || valor === 0
+}
+
+/** Importe para mostrar, o null si el dato no está cargado. */
+export function importeOpcional(valor: number | undefined | null, moneda: string) {
+  return sinCargar(valor) ? null : formatearImporte(valor as number, moneda)
+}

@@ -142,6 +142,50 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
 .acciones-fila { display: flex; gap: 0.35rem; justify-content: flex-end; }
 .acciones-fila button { padding: 0.3rem 0.55rem; font-size: 0.8rem; }
 .vacio-fila { text-align: center; color: var(--suave); padding: 2rem; }
+.vacio-dato { color: var(--suave); }
+
+/* Foto del producto: miniatura en la lista, previa más grande en el formulario. */
+.producto-nombre { display: flex; align-items: center; gap: 0.6rem; }
+.miniatura {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  flex: 0 0 auto;
+}
+.miniatura.vacia { background: var(--fondo); }
+
+.campo-foto { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.foto-previa {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--borde);
+  background: var(--fondo);
+}
+.foto-previa.vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--suave);
+  font-size: 0.75rem;
+}
+.campo-foto-acciones { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+.oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* El input de archivo no se puede estilar, así que el botón es su etiqueta. */
+.boton-archivo {
+  display: inline-block;
+  background: var(--acento);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
 
 .tag {
   display: inline-block;
@@ -297,6 +341,10 @@ input:disabled, select:disabled { opacity: 0.6; cursor: default; }
     border-top: 1px solid var(--borde);
   }
   .tabla-tarjetas td.acciones-fila button { flex: 1; font-size: 0.85rem; padding: 0.45rem; }
+
+  /* En la tarjeta, un dato que no cargaron directamente no se muestra: en la
+     tabla de escritorio la celda sigue ahí para no descuadrar las columnas. */
+  .tabla-tarjetas td.vacio-dato { display: none; }
 
   .tabla-tarjetas td.vacio-fila { display: block; text-align: center; }
   .tabla-tarjetas td.vacio-fila::before { content: none; }

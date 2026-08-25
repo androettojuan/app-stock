@@ -1,10 +1,13 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import type { ConfigNegocio, Producto, ProductoNuevo } from '../types'
+
+/** Qué hacer con la foto al guardar: dejarla como está, cambiarla o sacarla. */
+export type CambioFoto = { archivo?: File; quitar?: boolean }
 
 interface Props {
   producto?: Producto
   config: ConfigNegocio
-  onGuardar: (datos: ProductoNuevo) => Promise<void>
+  onGuardar: (datos: ProductoNuevo, foto: CambioFoto) => Promise<void>
   onCancelar: () => void
 }
 
@@ -29,6 +32,33 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
   )
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [archivo, setArchivo] = useState<File>()
+  const [quitarFoto, setQuitarFoto] = useState(false)
+  const inputFoto = useRef<HTMLInputElement>(null)
+
+  // Vista previa de la foto recién elegida, que todavía no está subida. La URL
+  // se crea al elegir el archivo y se libera al reemplazarla o al cerrar.
+  const [previa, setPrevia] = useState<string>()
+  useEffect(() => () => { if (previa) URL.revokeObjectURL(previa) }, [previa])
+
+  const fotoActual = quitarFoto ? undefined : (previa ?? producto?.foto)
+
+  function elegirFoto(e: ChangeEvent<HTMLInputElement>) {
+    const elegido = e.target.files?.[0]
+    if (!elegido) return
+    if (!elegido.type.startsWith('image/')) return setError('El archivo tiene que ser una imagen')
+    setError('')
+    setArchivo(elegido)
+    setPrevia(URL.createObjectURL(elegido))
+    setQuitarFoto(false)
+  }
+
+  function sacarFoto() {
+    setArchivo(undefined)
+    setPrevia(undefined)
+    setQuitarFoto(true)
+    if (inputFoto.current) inputFoto.current.value = ''
+  }
 
   function campo<K extends keyof ProductoNuevo>(k: K, v: ProductoNuevo[K]) {
     setDatos((d) => ({ ...d, [k]: v }))
@@ -40,7 +70,7 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
     setError('')
     setGuardando(true)
     try {
-      await onGuardar({ ...datos, nombre: datos.nombre.trim() })
+      await onGuardar({ ...datos, nombre: datos.nombre.trim() }, { archivo, quitar: quitarFoto })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar')
       setGuardando(false)
@@ -54,6 +84,29 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
         Nombre
         <input value={datos.nombre} onChange={(e) => campo('nombre', e.target.value)} autoFocus />
       </label>
+
+      <div className="campo-foto">
+        {fotoActual
+          ? <img className="foto-previa" src={fotoActual} alt={datos.nombre || 'Foto del producto'} />
+          : <div className="foto-previa vacia" aria-hidden="true">Sin foto</div>}
+        <div className="campo-foto-acciones">
+          <input
+            ref={inputFoto}
+            type="file"
+            accept="image/*"
+            id="foto-producto"
+            className="oculto"
+            onChange={elegirFoto}
+          />
+          <label className="boton-archivo" htmlFor="foto-producto">
+            {fotoActual ? 'Cambiar foto' : 'Elegir foto'}
+          </label>
+          {fotoActual && (
+            <button type="button" className="secundario" onClick={sacarFoto}>Sacar foto</button>
+          )}
+          <span className="dato">Se achica sola antes de subirla.</span>
+        </div>
+      </div>
       <div className="fila">
         <label>
           SKU

@@ -42,6 +42,8 @@ export interface Miembro {
 export interface Producto {
   id: string
   nombre: string
+  /** URL de descarga de la foto en Storage, si le cargaron una. */
+  foto?: string
   sku?: string
   categoria?: string
   unidad: string

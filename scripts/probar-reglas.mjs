@@ -1,5 +1,5 @@
-// Verifica firestore.rules contra el emulador: arma un negocio de prueba, y
-// comprueba qué puede hacer cada uno (dueño, operador, ajeno).
+// Verifica firestore.rules y storage.rules contra el emulador: arma un negocio
+// de prueba y comprueba qué puede hacer cada uno (dueño, operador, ajeno).
 //
 // Uso: npm run emulators (en otra terminal) y después npm run test:rules
 //
@@ -9,10 +9,13 @@
 import { readFileSync } from 'node:fs'
 
 const HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080'
+const HOST_STORAGE = process.env.FIREBASE_STORAGE_EMULATOR_HOST ?? '127.0.0.1:9199'
 const PROY =
   process.env.GCLOUD_PROJECT ??
   JSON.parse(readFileSync(new URL('../.firebaserc', import.meta.url), 'utf8')).projects.default
 const BASE = `http://${HOST}/v1/projects/${PROY}/databases/(default)/documents`
+const BUCKET = process.env.STORAGE_BUCKET ?? `${PROY}.firebasestorage.app`
+const BASE_STORAGE = `http://${HOST_STORAGE}/v0/b/${BUCKET}/o`
 
 const NEGOCIO = 'negocio-de-prueba-reglas'
 const DUENIO = 'duenio.prueba@example.com'
@@ -43,6 +46,7 @@ const pedir = (url, opciones, email) =>
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${email === 'owner' ? 'owner' : token(email)}`,
+      ...(opciones?.headers ?? {}),
     },
   })
 
@@ -102,6 +106,49 @@ await probar('el operador carga productos', OPERADOR, `${BASE}/negocios/${NEGOCI
 }, 'permite')
 await probar('un ajeno no ve el negocio', AJENO, negocioUrl, {}, 'rechaza')
 await probar('un ajeno no ve los productos', AJENO, `${BASE}/negocios/${NEGOCIO}/productos`, {}, 'rechaza')
+
+// --- Fotos de producto (storage.rules) ---
+const RUTA_CRUDA = `negocios/${NEGOCIO}/productos/prueba.jpg`
+const RUTA_FOTO = encodeURIComponent(RUTA_CRUDA)
+// Las fotos se suben con el protocolo resumable, igual que el SDK: es la única
+// forma en que el emulador completa contentType, que es lo que la regla mira.
+async function subirFoto(email) {
+  const inicio = await pedir(`${BASE_STORAGE}?name=${RUTA_FOTO}&uploadType=resumable`, {
+    method: 'POST',
+    headers: {
+      'X-Goog-Upload-Protocol': 'resumable',
+      'X-Goog-Upload-Command': 'start',
+      'X-Goog-Upload-Header-Content-Type': 'image/jpeg',
+    },
+    body: JSON.stringify({ name: RUTA_CRUDA, contentType: 'image/jpeg' }),
+  }, email)
+  if (!inicio.ok) return inicio
+
+  const url = inicio.headers.get('x-goog-upload-url')
+  return pedir(url, {
+    method: 'POST',
+    headers: {
+      'X-Goog-Upload-Protocol': 'resumable',
+      'X-Goog-Upload-Command': 'upload, finalize',
+      'X-Goog-Upload-Offset': '0',
+      'Content-Type': 'image/jpeg',
+    },
+    // Un JPEG mínimo alcanza: lo que se prueba es el permiso, no la imagen.
+    body: Buffer.from('ffd8ffdb0000ffd9', 'hex'),
+  }, email)
+}
+
+async function probarSubida(descripcion, email, esperado) {
+  const r = await subirFoto(email)
+  const bien = esperado === 'permite' ? r.ok : !r.ok
+  resultados.push(bien)
+  console.log(`${bien ? '✓' : '✗'} ${descripcion}: ${r.ok ? 'permitido' : 'rechazado'} (${r.status})`)
+}
+
+await probarSubida('el operador sube la foto de un producto', OPERADOR, 'permite')
+await probarSubida('un ajeno no sube fotos al negocio', AJENO, 'rechaza')
+await probar('un ajeno no ve las fotos del negocio', AJENO, `${BASE_STORAGE}/${RUTA_FOTO}`, {}, 'rechaza')
+await pedir(`${BASE_STORAGE}/${RUTA_FOTO}`, { method: 'DELETE' }, 'owner')
 
 await limpiar()
 

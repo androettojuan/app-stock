@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Las fotos de producto viven en negocios/{negocioId}/productos/{archivo} y se
+// rigen por el mismo criterio que los datos: las ve y las cambia quien sea
+// miembro de ese negocio. Firestore es la fuente de verdad de quién es miembro.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function userEmail() {
+      return request.auth != null ? request.auth.token.email : '';
+    }
+
+    function esMiembro(negocioId) {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/negocios/$(negocioId)/miembros/$(userEmail()));
+    }
+
+    match /negocios/{negocioId}/productos/{archivo} {
+      allow read: if esMiembro(negocioId);
+      // Solo imágenes y hasta 5 MB: la app ya las achica antes de subirlas, así
+      // que este tope es para que un error no llene el bucket.
+      allow write: if esMiembro(negocioId)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if esMiembro(negocioId);
+    }
+  }
+}
