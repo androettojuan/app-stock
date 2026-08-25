@@ -6,7 +6,7 @@ export function Movimientos({ movimientos }: { movimientos: Movimiento[] }) {
   }
 
   return (
-    <table>
+    <table className="tabla-tarjetas">
       <thead>
         <tr>
           <th>Fecha</th>
@@ -20,14 +20,17 @@ export function Movimientos({ movimientos }: { movimientos: Movimiento[] }) {
       <tbody>
         {movimientos.map((m) => (
           <tr key={m.id}>
-            <td>{m.fecha}</td>
-            <td>{m.nombre}</td>
-            <td><span className={`tag ${m.tipo}`}>{m.tipo}</span></td>
-            <td className={`num ${m.cantidad < 0 || m.tipo === 'salida' ? 'negativo' : ''}`}>
+            <td data-label="Fecha">{m.fecha}</td>
+            <td className="celda-principal" data-label="Producto">{m.nombre}</td>
+            <td data-label="Tipo"><span className={`tag ${m.tipo}`}>{m.tipo}</span></td>
+            <td
+              className={`num ${m.cantidad < 0 || m.tipo === 'salida' ? 'negativo' : ''}`}
+              data-label="Cantidad"
+            >
               {m.tipo === 'salida' ? `-${m.cantidad}` : m.cantidad}
             </td>
-            <td>{m.motivo ?? ''}</td>
-            <td>{m.usuario}</td>
+            <td data-label="Motivo">{m.motivo ?? ''}</td>
+            <td data-label="Usuario">{m.usuario}</td>
           </tr>
         ))}
       </tbody>

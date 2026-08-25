@@ -80,7 +80,7 @@ export function Productos({ negocioId, productos, usuario }: Props) {
         {productos.length} productos · valorizado ${valorStock.toLocaleString('es-AR')}
       </p>
 
-      <table>
+      <table className="tabla-tarjetas">
         <thead>
           <tr>
             <th>Producto</th>
@@ -94,15 +94,15 @@ export function Productos({ negocioId, productos, usuario }: Props) {
         <tbody>
           {visibles.map((p) => (
             <tr key={p.id} className={p.stock <= p.minimo ? 'alerta' : ''}>
-              <td>
+              <td className="celda-principal">
                 <strong>{p.nombre}</strong>
                 {p.categoria && <span className="tag">{p.categoria}</span>}
                 {!p.activo && <span className="tag gris">inactivo</span>}
               </td>
-              <td className="num">{p.stock} {p.unidad}</td>
-              <td className="num">{p.minimo}</td>
-              <td className="num">${p.costo}</td>
-              <td className="num">${p.precio}</td>
+              <td className="num" data-label="Stock">{p.stock} {p.unidad}</td>
+              <td className="num" data-label="Mínimo">{p.minimo}</td>
+              <td className="num" data-label="Costo">${p.costo}</td>
+              <td className="num" data-label="Precio">${p.precio}</td>
               <td className="acciones-fila">
                 <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p })}>Mover</button>
                 <button className="secundario" onClick={() => setDialogo({ tipo: 'editar', producto: p })}>Editar</button>

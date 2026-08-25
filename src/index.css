@@ -1,4 +1,20 @@
+/* Paleta por tema. El hook useTema escribe data-tema en <html>; el bloque
+   :root es el tema claro y se pisa cuando el tema elegido es oscuro. */
 :root {
+  --fondo: #f5f6f8;
+  --panel: #ffffff;
+  --borde: #d9dde5;
+  --texto: #1b1f27;
+  --suave: #626b7c;
+  --acento: #2f6fdd;
+  --alerta: #d13b3b;
+  --ok: #1f9254;
+  --sombra: rgba(15, 17, 21, 0.08);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+
+:root[data-tema='oscuro'] {
   --fondo: #0f1115;
   --panel: #181b22;
   --borde: #2a2f3a;
@@ -7,7 +23,7 @@
   --acento: #4c8dff;
   --alerta: #ff6b6b;
   --ok: #46c07d;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sombra: rgba(0, 0, 0, 0.4);
   color-scheme: dark;
 }
 
@@ -17,6 +33,7 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
+  -webkit-text-size-adjust: 100%;
 }
 
 h1 { font-size: 1.3rem; margin: 0; }
@@ -31,20 +48,25 @@ button {
   padding: 0.5rem 0.9rem;
   font-size: 0.9rem;
   cursor: pointer;
+  /* Objetivo táctil cómodo en el teléfono. */
+  min-height: 40px;
 }
 button:disabled { opacity: 0.5; cursor: default; }
 button.secundario { background: transparent; border: 1px solid var(--borde); color: var(--texto); }
+button.icono { padding: 0.4rem 0.6rem; font-size: 1rem; line-height: 1; }
 
-input {
-  background: var(--fondo);
+input, select {
+  background: var(--panel);
   border: 1px solid var(--borde);
   border-radius: 6px;
   color: var(--texto);
-  padding: 0.5rem 0.7rem;
-  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  /* 16px evita que iOS haga zoom al enfocar un campo. */
+  font-size: 1rem;
   width: 100%;
+  min-height: 40px;
 }
-input[type='checkbox'] { width: auto; }
+input[type='checkbox'] { width: auto; min-height: 0; }
 
 label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8rem; color: var(--suave); flex: 1; }
 label.check { flex-direction: row; align-items: center; gap: 0.4rem; flex: 0 0 auto; white-space: nowrap; }
@@ -61,12 +83,18 @@ header {
   border-bottom: 1px solid var(--borde);
 }
 header > div { display: flex; align-items: center; gap: 0.5rem; }
-.header-acciones { flex-wrap: wrap; }
+.header-acciones { flex-wrap: wrap; justify-content: flex-end; }
+.header-acciones .email {
+  max-width: 45vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .cargando, .vacio { padding: 3rem 1rem; text-align: center; color: var(--suave); }
 
 .login {
-  max-width: 320px;
+  max-width: 340px;
   margin: 15vh auto;
   display: flex;
   flex-direction: column;
@@ -75,7 +103,10 @@ header > div { display: flex; align-items: center; gap: 0.5rem; }
   background: var(--panel);
   border: 1px solid var(--borde);
   border-radius: 10px;
+  box-shadow: 0 2px 10px var(--sombra);
 }
+.login-titulo { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.login-texto { color: var(--suave); font-size: 0.9rem; margin: 0; }
 
 .selector { max-width: 480px; margin: 3rem auto; }
 .selector ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
@@ -118,9 +149,10 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
   color: var(--suave);
   font-size: 0.7rem;
 }
-.tag.entrada { background: rgba(70, 192, 125, 0.2); color: var(--ok); }
-.tag.salida { background: rgba(255, 107, 107, 0.2); color: var(--alerta); }
-.tag.emulador { background: rgba(255, 183, 77, 0.2); color: #ffb74d; }
+.tag.entrada { background: rgba(31, 146, 84, 0.18); color: var(--ok); }
+.tag.salida { background: rgba(209, 59, 59, 0.18); color: var(--alerta); }
+.tag.emulador { background: rgba(214, 137, 16, 0.18); color: #b8730d; }
+:root[data-tema='oscuro'] .tag.emulador { background: rgba(255, 183, 77, 0.2); color: #ffb74d; }
 
 .dato { color: var(--suave); font-size: 0.85rem; }
 .error { color: var(--alerta); font-size: 0.85rem; margin: 0.5rem 0; }
@@ -147,3 +179,77 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
 .form { display: flex; flex-direction: column; gap: 0.75rem; }
 .form .fila { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 .form .acciones { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+/* En pantallas chicas las tablas no entran: cada fila pasa a ser una tarjeta
+   y cada celda muestra su encabezado desde data-label. */
+@media (max-width: 720px) {
+  .app { padding: 0.75rem; }
+
+  header { align-items: flex-start; }
+  .header-acciones .email { max-width: 100%; }
+
+  /* En el teléfono las solapas se reparten el ancho de la pantalla. */
+  .tabs button { flex: 1; }
+
+  .barra { gap: 0.5rem; }
+  .barra input { min-width: 0; }
+  /* Buscador y filtro ocupan cada uno su renglón: en 390px no entran juntos. */
+  .barra > input { flex: 1 1 100%; }
+  .barra label.check { flex: 1 1 100%; }
+  .barra button { flex: 1 1 auto; }
+
+  .tabla-tarjetas thead { display: none; }
+  .tabla-tarjetas, .tabla-tarjetas tbody, .tabla-tarjetas tr, .tabla-tarjetas td { display: block; }
+
+  .tabla-tarjetas tr {
+    background: var(--panel);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+  .tabla-tarjetas tr.alerta { border-left: 3px solid var(--alerta); }
+  .tabla-tarjetas tr.alerta td:first-child { border-left: none; }
+
+  .tabla-tarjetas td {
+    border: none;
+    padding: 0.2rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    text-align: right;
+  }
+  /* El encabezado de la columna, a la izquierda de cada dato. */
+  .tabla-tarjetas td[data-label]::before {
+    content: attr(data-label);
+    color: var(--suave);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    text-align: left;
+  }
+  .tabla-tarjetas td.celda-principal {
+    display: block;
+    text-align: left;
+    font-size: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  .tabla-tarjetas td.celda-principal::before { content: none; }
+  .tabla-tarjetas td.celda-principal .tag { margin-left: 0.4rem; }
+
+  .tabla-tarjetas td.acciones-fila {
+    justify-content: stretch;
+    gap: 0.4rem;
+    padding-top: 0.6rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--borde);
+  }
+  .tabla-tarjetas td.acciones-fila button { flex: 1; font-size: 0.85rem; padding: 0.45rem; }
+
+  .tabla-tarjetas td.vacio-fila { display: block; text-align: center; }
+  .tabla-tarjetas td.vacio-fila::before { content: none; }
+
+  .modal { padding: 1rem; max-height: 100vh; border-radius: 12px; }
+  .form .fila { flex-direction: column; gap: 0.5rem; }
+  .form .acciones button { flex: 1; }
+}

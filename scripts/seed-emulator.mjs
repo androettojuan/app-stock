@@ -1,5 +1,6 @@
 // Carga datos de prueba en el emulador: dos negocios, un usuario y productos.
 // Uso: npm run emulators (en otra terminal) y después npm run db:seed
+import { readFileSync } from 'node:fs'
 import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
@@ -7,10 +8,16 @@ import { getAuth } from 'firebase-admin/auth'
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8080'
 process.env.FIREBASE_AUTH_EMULATOR_HOST ??= '127.0.0.1:9099'
 
+// El login es con Google: alcanza con el email. En el emulador el popup deja
+// entrar con cualquier cuenta, así que este email es el que hay que usar ahí.
 const EMAIL = process.env.SEED_EMAIL ?? 'demo@app-stock.test'
-const CLAVE = process.env.SEED_PASSWORD ?? '123456'
 
-initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'app-stock' })
+// Mismo proyecto que usan los emuladores, así el seed cae en el namespace correcto.
+const proyecto =
+  process.env.GCLOUD_PROJECT ??
+  JSON.parse(readFileSync(new URL('../.firebaserc', import.meta.url), 'utf8')).projects.default
+
+initializeApp({ projectId: proyecto })
 const db = getFirestore()
 const auth = getAuth()
 
@@ -41,12 +48,15 @@ async function usuarioDemo() {
     const u = await auth.getUserByEmail(EMAIL)
     return u.uid
   } catch {
-    const u = await auth.createUser({ email: EMAIL, password: CLAVE })
+    const u = await auth.createUser({ email: EMAIL })
     return u.uid
   }
 }
 
 await usuarioDemo()
+
+// Super admin: es quien puede crear negocios y administrar miembros.
+await db.collection('superAdmins').doc(EMAIL).set({ email: EMAIL, creado: new Date() })
 
 for (const negocio of NEGOCIOS) {
   const ref = db.collection('negocios').doc(negocio.id)
@@ -54,10 +64,11 @@ for (const negocio of NEGOCIOS) {
   await ref.collection('miembros').doc(EMAIL).set({ email: EMAIL, rol: 'admin', creado: new Date() })
 
   for (const p of negocio.productos) {
-    await ref.collection('productos').add({ ...p, activo: true, actualizado: new Date() })
+    // Id fijo por SKU: correr el seed dos veces no duplica productos.
+    await ref.collection('productos').doc(p.sku).set({ ...p, activo: true, actualizado: new Date() })
   }
   console.log(`✓ ${negocio.nombre}: ${negocio.productos.length} productos`)
 }
 
-console.log(`\nEntrá con ${EMAIL} / ${CLAVE}`)
+console.log(`\nEntrá con Google usando ${EMAIL}`)
 process.exit(0)

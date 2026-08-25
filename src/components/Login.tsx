@@ -1,51 +1,50 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 
 interface Props {
-  entrar: (email: string, clave: string) => Promise<unknown>
+  entrar: () => Promise<unknown>
+  tema: 'claro' | 'oscuro'
+  onCambiarTema: () => void
 }
 
-export function Login({ entrar }: Props) {
-  const [email, setEmail] = useState('')
-  const [clave, setClave] = useState('')
+export function Login({ entrar, tema, onCambiarTema }: Props) {
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault()
+  async function onClick() {
     setError('')
     setEnviando(true)
     try {
-      await entrar(email.trim(), clave)
-    } catch {
-      setError('Email o contraseña incorrectos')
+      await entrar()
+    } catch (e) {
+      const codigo = (e as { code?: string }).code
+      // Cerrar el popup a mano no es un error que valga la pena mostrar.
+      if (codigo !== 'auth/popup-closed-by-user' && codigo !== 'auth/cancelled-popup-request') {
+        setError('No pudimos entrar con Google. Probá de nuevo.')
+      }
     } finally {
       setEnviando(false)
     }
   }
 
   return (
-    <form className="login" onSubmit={onSubmit}>
-      <h1>app-stock</h1>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        autoComplete="username"
-        required
-      />
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={clave}
-        onChange={(e) => setClave(e.target.value)}
-        autoComplete="current-password"
-        required
-      />
+    <div className="login">
+      <div className="login-titulo">
+        <h1>app-stock</h1>
+        <button
+          type="button"
+          className="secundario icono"
+          onClick={onCambiarTema}
+          title={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+          aria-label={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+        >
+          {tema === 'oscuro' ? '☀' : '☾'}
+        </button>
+      </div>
+      <p className="login-texto">Entrá con tu cuenta de Google para ver tus negocios.</p>
       {error && <p className="error">{error}</p>}
-      <button type="submit" disabled={enviando}>
-        {enviando ? 'Entrando…' : 'Entrar'}
+      <button type="button" onClick={onClick} disabled={enviando}>
+        {enviando ? 'Entrando…' : 'Entrar con Google'}
       </button>
-    </form>
+    </div>
   )
 }

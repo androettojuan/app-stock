@@ -3,7 +3,9 @@
 Control de stock multi-negocio: cada negocio tiene sus productos y su histórico
 de movimientos, y un mismo usuario puede pertenecer a varios.
 
-Stack: Vite + React 19 + TypeScript + Firebase (Auth + Firestore).
+Stack: Vite + React 19 + TypeScript + Firebase (Auth con Google + Firestore).
+Interfaz responsive (en el teléfono las tablas se muestran como tarjetas) con
+tema claro y oscuro: arranca según el sistema y se cambia con el botón ☾/☀.
 
 ## Modelo de datos
 
@@ -35,9 +37,28 @@ npm run db:seed           # terminal 2 (una vez): datos de prueba
 npm run dev:emulator      # terminal 2: la app apuntando al emulador
 ```
 
-El seed crea `demo@app-stock.test` / `123456` como miembro de dos negocios.
+El seed da de alta un email como super admin y miembro de los dos negocios. Por
+defecto es `demo@app-stock.test`; en el emulador el popup de Google deja entrar
+con cualquier cuenta, así que conviene sembrar la que vayas a usar:
+
+```bash
+SEED_EMAIL=tu.cuenta@gmail.com npm run db:seed
+```
 
 `npm run dev` apunta a Firebase real: usarlo solo cuando haga falta.
+
+## Puesta a punto del proyecto en Firebase
+
+Una sola vez, desde la consola del proyecto (`stock-app-b7a37`):
+
+1. **Authentication → Sign-in method**: habilitar el proveedor **Google**.
+2. **Authentication → Settings → Authorized domains**: agregar el dominio donde
+   se publique (`localhost` ya viene habilitado).
+3. **Firestore**: crear la base de datos.
+4. Dar de alta el primer super admin a mano: colección `superAdmins`, documento
+   con id igual al email, campo `email` con ese mismo valor. Desde ahí ya se
+   pueden crear negocios y agregar miembros.
+5. Publicar reglas e índices: `firebase deploy --only firestore:rules,firestore:indexes`.
 
 ## Deploy
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from './hooks/useAuth'
+import { useTema } from './hooks/useTema'
 import { negociosDelUsuario } from './data/negocios'
 import { escucharProductos } from './data/productos'
 import { escucharMovimientos } from './data/movimientos'
@@ -16,6 +17,7 @@ type Solapa = 'productos' | 'movimientos'
 
 export default function App() {
   const { usuario, cargando, entrar, salir } = useAuth()
+  const { tema, alternar } = useTema()
   const [negocios, setNegocios] = useState<Negocio[] | null>(null)
   const [negocio, setNegocio] = useState<Negocio | null>(null)
   const [productos, setProductos] = useState<Producto[]>([])
@@ -55,7 +57,7 @@ export default function App() {
   }, [negocio])
 
   if (cargando) return <div className="cargando">Cargando…</div>
-  if (!usuario) return <Login entrar={entrar} />
+  if (!usuario) return <Login entrar={entrar} tema={tema} onCambiarTema={alternar} />
 
   function cambiarNegocio() {
     localStorage.removeItem(CLAVE_NEGOCIO)
@@ -72,7 +74,15 @@ export default function App() {
           {usaEmulador && <span className="tag emulador">emulador</span>}
         </div>
         <div className="header-acciones">
-          <span className="dato">{usuario.email}</span>
+          <span className="dato email">{usuario.email}</span>
+          <button
+            className="secundario icono"
+            onClick={alternar}
+            title={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+            aria-label={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+          >
+            {tema === 'oscuro' ? '☀' : '☾'}
+          </button>
           {negocio && negocios && negocios.length > 1 && (
             <button className="secundario" onClick={cambiarNegocio}>Cambiar negocio</button>
           )}

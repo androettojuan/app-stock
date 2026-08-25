@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import {
+  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth'
 import { auth } from '../firebase/config'
+
+const proveedor = new GoogleAuthProvider()
+// Que siempre pregunte con qué cuenta entrar: es común tener más de una.
+proveedor.setCustomParameters({ prompt: 'select_account' })
 
 export function useAuth() {
   const [usuario, setUsuario] = useState<User | null>(null)
@@ -19,7 +24,7 @@ export function useAuth() {
   return {
     usuario,
     cargando,
-    entrar: (email: string, clave: string) => signInWithEmailAndPassword(auth, email, clave),
+    entrar: () => signInWithPopup(auth, proveedor),
     salir: () => signOut(auth),
   }
 }
