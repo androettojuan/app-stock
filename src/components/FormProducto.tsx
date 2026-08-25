@@ -1,27 +1,31 @@
 import { useState, type FormEvent } from 'react'
-import type { Producto, ProductoNuevo } from '../types'
+import type { ConfigNegocio, Producto, ProductoNuevo } from '../types'
 
 interface Props {
   producto?: Producto
+  config: ConfigNegocio
   onGuardar: (datos: ProductoNuevo) => Promise<void>
   onCancelar: () => void
 }
 
-const vacio: ProductoNuevo = {
-  nombre: '',
-  sku: '',
-  categoria: '',
-  unidad: 'u',
-  stock: 0,
-  minimo: 0,
-  costo: 0,
-  precio: 0,
-  activo: true,
+/** Producto en blanco, con lo que haya configurado el negocio. */
+function vacio(config: ConfigNegocio): ProductoNuevo {
+  return {
+    nombre: '',
+    sku: '',
+    categoria: '',
+    unidad: config.unidadDefecto,
+    stock: 0,
+    minimo: config.minimoDefecto,
+    costo: 0,
+    precio: 0,
+    activo: true,
+  }
 }
 
-export function FormProducto({ producto, onGuardar, onCancelar }: Props) {
+export function FormProducto({ producto, config, onGuardar, onCancelar }: Props) {
   const [datos, setDatos] = useState<ProductoNuevo>(() =>
-    producto ? { ...producto } : { ...vacio },
+    producto ? { ...producto } : vacio(config),
   )
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -57,11 +61,25 @@ export function FormProducto({ producto, onGuardar, onCancelar }: Props) {
         </label>
         <label>
           Categoría
-          <input value={datos.categoria ?? ''} onChange={(e) => campo('categoria', e.target.value)} />
+          <input
+            value={datos.categoria ?? ''}
+            onChange={(e) => campo('categoria', e.target.value)}
+            list="categorias-negocio"
+          />
+          <datalist id="categorias-negocio">
+            {config.categorias.map((c) => <option key={c} value={c} />)}
+          </datalist>
         </label>
         <label>
           Unidad
-          <input value={datos.unidad} onChange={(e) => campo('unidad', e.target.value)} />
+          <input
+            value={datos.unidad}
+            onChange={(e) => campo('unidad', e.target.value)}
+            list="unidades-negocio"
+          />
+          <datalist id="unidades-negocio">
+            {config.unidades.map((u) => <option key={u} value={u} />)}
+          </datalist>
         </label>
       </div>
       <div className="fila">

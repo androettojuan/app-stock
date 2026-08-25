@@ -4,12 +4,14 @@ import type { AltaMovimiento } from '../data/movimientos'
 
 interface Props {
   producto: Producto
+  /** Código de moneda del negocio, para mostrar el costo con su símbolo. */
+  moneda: string
   usuario: string
   onRegistrar: (mov: AltaMovimiento) => Promise<void>
   onCancelar: () => void
 }
 
-export function FormMovimiento({ producto, usuario, onRegistrar, onCancelar }: Props) {
+export function FormMovimiento({ producto, moneda, usuario, onRegistrar, onCancelar }: Props) {
   const [tipo, setTipo] = useState<TipoMovimiento>('entrada')
   const [cantidad, setCantidad] = useState(0)
   const [costo, setCosto] = useState(producto.costo)
@@ -66,7 +68,7 @@ export function FormMovimiento({ producto, usuario, onRegistrar, onCancelar }: P
       </label>
       {tipo === 'entrada' && (
         <label>
-          Costo unitario
+          Costo unitario ({moneda})
           <input type="number" step="any" value={costo} onChange={(e) => setCosto(Number(e.target.value))} />
         </label>
       )}

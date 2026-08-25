@@ -9,10 +9,12 @@ rules_version = '2';
 //                                             cantidad, costo?, motivo?, usuario, fecha, ts }
 //
 // Acceso:
-//   - Miembro del negocio (existe su email en `miembros`): puede todo dentro de
-//     su negocio, salvo dar de alta/baja miembros y borrar el negocio.
-//   - Super admin (existe su email en `superAdmins`): crea negocios y administra
-//     los miembros de cada uno. La colección `superAdmins` no se escribe desde
+//   - Miembro del negocio (existe su email en `miembros`): trabaja con productos
+//     y movimientos, pero no toca la configuración ni los miembros.
+//   - Dueño (miembro con rol 'admin'): además configura el negocio (nombre,
+//     rubro y `config`) y da de alta o baja a los miembros.
+//   - Super admin (existe su email en `superAdmins`): crea y borra negocios, y
+//     puede todo en cualquiera. La colección `superAdmins` no se escribe desde
 //     la app: se carga a mano desde la consola de Firebase.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -28,6 +30,14 @@ service cloud.firestore {
     function isMiembro(negocioId) {
       return request.auth != null
         && exists(/databases/$(database)/documents/negocios/$(negocioId)/miembros/$(userEmail()));
+    }
+
+    // Dueño del negocio. El && corta antes del get() si no es miembro, así que
+    // nunca se lee un documento que no existe.
+    function isDuenio(negocioId) {
+      return isMiembro(negocioId)
+        && get(/databases/$(database)/documents/negocios/$(negocioId)/miembros/$(userEmail()))
+             .data.rol == 'admin';
     }
 
     // Cada usuario puede leer solo su propia entrada (para saber si es super
@@ -46,16 +56,17 @@ service cloud.firestore {
     match /negocios/{negocioId} {
       allow read: if isMiembro(negocioId) || isSuperAdmin();
       allow create, delete: if isSuperAdmin();
-      // El negocio edita sus datos de presentación; el resto (activo, creado)
-      // queda reservado al super admin.
+      // El dueño configura su negocio; `activo` y `creado` quedan reservados al
+      // super admin, y el operador no edita nada de esto.
       allow update: if isSuperAdmin()
-        || (isMiembro(negocioId)
+        || (isDuenio(negocioId)
             && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['nombre', 'rubro']));
+                 .hasOnly(['nombre', 'rubro', 'config']));
 
       match /miembros/{docEmail} {
         allow read: if isMiembro(negocioId) || isSuperAdmin();
-        allow write: if isSuperAdmin();
+        // El dueño maneja los accesos de su propio negocio.
+        allow write: if isSuperAdmin() || isDuenio(negocioId);
       }
 
       match /productos/{productoId} {

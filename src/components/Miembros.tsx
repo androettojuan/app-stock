@@ -6,9 +6,11 @@ interface Props {
   negocioId: string
   /** Email de quien está usando la app: no puede sacarse a sí mismo. */
   usuario: string
+  /** El operador ve quiénes son los miembros, pero no los cambia. */
+  puedeEditar?: boolean
 }
 
-export function Miembros({ negocioId, usuario }: Props) {
+export function Miembros({ negocioId, usuario, puedeEditar = true }: Props) {
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [email, setEmail] = useState('')
   const [rol, setRol] = useState<Rol>('operador')
@@ -24,6 +26,9 @@ export function Miembros({ negocioId, usuario }: Props) {
     e.preventDefault()
     const limpio = email.trim().toLowerCase()
     if (!limpio.includes('@')) return setError('Poné el email de la cuenta de Google')
+    // Volver a guardarse a sí mismo con otro rol es la forma fácil de quedarse
+    // sin dueño en el negocio.
+    if (limpio === usuario) return setError('Ya sos miembro de este negocio')
     setError('')
     setGuardando(true)
     try {
@@ -47,6 +52,7 @@ export function Miembros({ negocioId, usuario }: Props) {
 
   return (
     <section>
+      {puedeEditar && (
       <form className="barra" onSubmit={agregar}>
         <input
           type="email"
@@ -60,11 +66,13 @@ export function Miembros({ negocioId, usuario }: Props) {
         </select>
         <button type="submit" disabled={guardando}>Agregar</button>
       </form>
+      )}
 
       {error && <p className="error">{error}</p>}
 
       <p className="dato">
-        Quien figure acá entra con su cuenta de Google y ve este negocio.
+        Quien figure acá entra con su cuenta de Google y ve este negocio. El rol
+        «admin» además configura el negocio y maneja los accesos.
       </p>
 
       <table className="tabla-tarjetas">
@@ -84,14 +92,16 @@ export function Miembros({ negocioId, usuario }: Props) {
               </td>
               <td data-label="Rol">{m.rol}</td>
               <td className="acciones-fila">
-                <button
-                  className="secundario"
-                  onClick={() => quitar(m)}
-                  disabled={m.email === usuario}
-                  title={m.email === usuario ? 'No podés sacarte a vos mismo' : undefined}
-                >
-                  Sacar
-                </button>
+                {puedeEditar && (
+                  <button
+                    className="secundario"
+                    onClick={() => quitar(m)}
+                    disabled={m.email === usuario}
+                    title={m.email === usuario ? 'No podés sacarte a vos mismo' : undefined}
+                  >
+                    Sacar
+                  </button>
+                )}
               </td>
             </tr>
           ))}

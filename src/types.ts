@@ -7,6 +7,30 @@ export interface Negocio {
   nombre: string
   rubro?: string
   activo: boolean
+  config?: ConfigNegocio
+  /** Rol del usuario que está mirando, según su documento en `miembros`. */
+  rol?: Rol
+}
+
+/** Ajustes del negocio. Todo opcional: un negocio viejo sin `config` usa CONFIG_POR_DEFECTO. */
+export interface ConfigNegocio {
+  /** Código ISO de la moneda con que se muestran los importes. */
+  moneda: string
+  /** Unidad que viene puesta al cargar un producto nuevo. */
+  unidadDefecto: string
+  /** Mínimo que viene puesto al cargar un producto nuevo. */
+  minimoDefecto: number
+  /** Sugerencias para no escribirlas a mano en cada producto. */
+  categorias: string[]
+  unidades: string[]
+}
+
+export const CONFIG_POR_DEFECTO: ConfigNegocio = {
+  moneda: 'ARS',
+  unidadDefecto: 'u',
+  minimoDefecto: 0,
+  categorias: [],
+  unidades: ['u', 'kg', 'l', 'm', 'caja'],
 }
 
 export interface Miembro {

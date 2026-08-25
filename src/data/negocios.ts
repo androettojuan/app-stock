@@ -1,6 +1,11 @@
-import { collectionGroup, getDocs, getDoc, doc, query, where } from 'firebase/firestore'
+import { collectionGroup, getDocs, getDoc, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import type { Negocio } from '../types'
+import { CONFIG_POR_DEFECTO, type ConfigNegocio, type Negocio, type Rol } from '../types'
+
+/** Un negocio sin `config`, o al que le falte una clave, cae en los valores por defecto. */
+export function configDe(negocio: Negocio | null | undefined): ConfigNegocio {
+  return { ...CONFIG_POR_DEFECTO, ...(negocio?.config ?? {}) }
+}
 
 /**
  * Negocios donde el usuario figura como miembro. Se busca por collection group
@@ -23,6 +28,9 @@ export async function negociosDelUsuario(email: string): Promise<Negocio[]> {
         nombre: data.nombre ?? negocioSnap.id,
         rubro: data.rubro,
         activo: data.activo !== false,
+        config: data.config,
+        // El rol sale de la membresía con la que encontramos el negocio.
+        rol: (d.data().rol as Rol) ?? 'operador',
       } satisfies Negocio
     }),
   )
@@ -36,5 +44,39 @@ export async function negocio(id: string): Promise<Negocio | null> {
   const snap = await getDoc(doc(db, 'negocios', id))
   if (!snap.exists()) return null
   const data = snap.data()
-  return { id: snap.id, nombre: data.nombre ?? snap.id, rubro: data.rubro, activo: data.activo !== false }
+  return {
+    id: snap.id,
+    nombre: data.nombre ?? snap.id,
+    rubro: data.rubro,
+    activo: data.activo !== false,
+    config: data.config,
+  }
+}
+
+/**
+ * Se suscribe al negocio elegido, así un cambio de nombre o de configuración se
+ * ve en el momento y en todas las pantallas abiertas.
+ */
+export function escucharNegocio(
+  id: string,
+  onCambio: (datos: Pick<Negocio, 'nombre' | 'rubro' | 'config'>) => void,
+  onError?: (e: Error) => void,
+) {
+  return onSnapshot(
+    doc(db, 'negocios', id),
+    (snap) => {
+      if (!snap.exists()) return
+      const data = snap.data()
+      onCambio({ nombre: data.nombre ?? snap.id, rubro: data.rubro, config: data.config })
+    },
+    onError,
+  )
+}
+
+/** Datos y configuración del negocio. Es lo único que las reglas dejan tocar al dueño. */
+export function guardarNegocio(
+  id: string,
+  cambios: { nombre?: string; rubro?: string; config?: ConfigNegocio },
+) {
+  return updateDoc(doc(db, 'negocios', id), cambios)
 }

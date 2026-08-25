@@ -11,7 +11,10 @@ tema claro y oscuro: arranca según el sistema y se cambia con el botón ☾/☀
 
 ```
 superAdmins/{email}                      alta manual desde la consola
-negocios/{negocioId}                     { nombre, rubro, activo, creado }
+negocios/{negocioId}                     { nombre, rubro, activo, creado,
+                                           config: { moneda, unidadDefecto,
+                                             minimoDefecto, categorias[],
+                                             unidades[] } }
 negocios/{negocioId}/miembros/{email}    { email, nombre?, rol, creado }
 negocios/{negocioId}/productos/{id}      { nombre, sku, categoria, unidad,
                                            stock, minimo, costo, precio, activo }
@@ -19,10 +22,12 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
                                            costo?, motivo?, usuario, fecha, ts }
 ```
 
-- Miembro de un negocio: puede todo dentro de ese negocio, menos dar de alta o
-  baja miembros y borrar el negocio.
-- Super admin: crea negocios y administra sus miembros desde la app. Al crear
-  un negocio queda como miembro admin, si no nadie podría verlo.
+- Miembro con rol `operador`: trabaja con productos y movimientos. Ve la
+  configuración del negocio, pero no la cambia.
+- Miembro con rol `admin` (el dueño): además configura el negocio y da de alta
+  o baja miembros, desde el ⚙ del encabezado.
+- Super admin: crea y borra negocios, y puede todo en cualquiera. Al crear un
+  negocio queda como miembro admin, si no nadie podría verlo.
 - Los movimientos son histórico: se crean y no se editan. El stock del producto
   se corrige en la misma transacción que registra el movimiento, así dos cargas
   simultáneas no se pisan.
@@ -36,7 +41,11 @@ cp .env.example .env      # completar con los datos del proyecto Firebase
 npm run emulators         # terminal 1: Auth + Firestore locales
 npm run db:seed           # terminal 2 (una vez): datos de prueba
 npm run dev:emulator      # terminal 2: la app apuntando al emulador
+npm run test:rules        # comprueba firestore.rules contra el emulador
 ```
+
+`npm run test:rules` arma un negocio de prueba y verifica quién puede hacer
+qué: conviene correrlo después de tocar `firestore.rules`.
 
 El seed da de alta un email como super admin y miembro de los dos negocios. Por
 defecto es `demo@app-stock.test`; en el emulador el popup de Google deja entrar
@@ -59,7 +68,7 @@ Una sola vez, desde la consola del proyecto (`stock-app-b7a37`):
 4. Dar de alta el primer super admin a mano: colección `superAdmins`, documento
    con id igual al email, campo `email` con ese mismo valor. Es el único paso
    que se hace desde la consola: el super admin ya crea negocios con **+
-   Negocio** y maneja los accesos desde la solapa **Miembros**.
+   Negocio**, y cada dueño configura el suyo desde el ⚙ del encabezado.
 5. Publicar reglas e índices: `firebase deploy --only firestore:rules,firestore:indexes`.
 
 ## Deploy

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useTema } from './hooks/useTema'
-import { negociosDelUsuario } from './data/negocios'
+import { configDe, escucharNegocio, negociosDelUsuario } from './data/negocios'
 import { crearNegocio, esSuperAdmin } from './data/admin'
 import { escucharProductos } from './data/productos'
 import { escucharMovimientos } from './data/movimientos'
@@ -9,7 +9,7 @@ import { Login } from './components/Login'
 import { SelectorNegocio } from './components/SelectorNegocio'
 import { Productos } from './components/Productos'
 import { Movimientos } from './components/Movimientos'
-import { Miembros } from './components/Miembros'
+import { Configuracion } from './components/Configuracion'
 import { FormNegocio } from './components/FormNegocio'
 import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
@@ -17,7 +17,7 @@ import type { Movimiento, Negocio, Producto } from './types'
 
 const CLAVE_NEGOCIO = 'app-stock:negocio'
 
-type Solapa = 'productos' | 'movimientos' | 'miembros'
+type Solapa = 'productos' | 'movimientos'
 
 export default function App() {
   const { usuario, cargando, entrar, salir } = useAuth()
@@ -27,6 +27,8 @@ export default function App() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [solapa, setSolapa] = useState<Solapa>('productos')
+  // La configuración es una pantalla aparte, no una solapa más del día a día.
+  const [enConfig, setEnConfig] = useState(false)
   const [superAdmin, setSuperAdmin] = useState(false)
   const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [error, setError] = useState('')
@@ -55,15 +57,20 @@ export default function App() {
     return () => { vigente = false }
   }, [usuario])
 
+  const negocioId = negocio?.id
   useEffect(() => {
-    if (!negocio) return
-    localStorage.setItem(CLAVE_NEGOCIO, negocio.id)
+    if (!negocioId) return
+    const id = negocioId
+    localStorage.setItem(CLAVE_NEGOCIO, id)
     const corta = [
-      escucharProductos(negocio.id, setProductos, () => setError('No se pudieron leer los productos')),
-      escucharMovimientos(negocio.id, setMovimientos, () => setError('No se pudieron leer los movimientos')),
+      escucharProductos(id, setProductos, () => setError('No se pudieron leer los productos')),
+      escucharMovimientos(id, setMovimientos, () => setError('No se pudieron leer los movimientos')),
+      escucharNegocio(id, (datos) => {
+        setNegocio((actual) => (actual && actual.id === id ? { ...actual, ...datos } : actual))
+      }),
     ]
     return () => corta.forEach((f) => f())
-  }, [negocio])
+  }, [negocioId])
 
   if (cargando) return <div className="cargando">Cargando…</div>
   if (!usuario) return <Login entrar={entrar} tema={tema} onCambiarTema={alternar} />
@@ -72,14 +79,16 @@ export default function App() {
     const email = usuario?.email
     if (!email) return
     const id = await crearNegocio(datos, email)
-    const nuevo = { id, nombre: datos.nombre, rubro: datos.rubro, activo: true }
+    const nuevo = { id, nombre: datos.nombre, rubro: datos.rubro, activo: true, rol: 'admin' as const }
     setNegocios((lista) => [...(lista ?? []), nuevo])
     setNegocio(nuevo)
     setSolapa('productos')
+    setEnConfig(false)
     setCreandoNegocio(false)
   }
 
   function cambiarNegocio() {
+    setEnConfig(false)
     localStorage.removeItem(CLAVE_NEGOCIO)
     setNegocio(null)
     setProductos([])
@@ -95,6 +104,17 @@ export default function App() {
         </div>
         <div className="header-acciones">
           <span className="dato email">{usuario.email}</span>
+          {negocio && (
+            <button
+              className={`secundario icono ${enConfig ? 'activo' : ''}`}
+              onClick={() => setEnConfig((v) => !v)}
+              title="Configuración del negocio"
+              aria-label="Configuración del negocio"
+              aria-pressed={enConfig}
+            >
+              ⚙
+            </button>
+          )}
           <button
             className="secundario icono"
             onClick={alternar}
@@ -123,6 +143,18 @@ export default function App() {
               onCrear={() => setCreandoNegocio(true)}
             />
           )
+      ) : enConfig ? (
+        <main>
+          <div className="config-encabezado">
+            <h2>Configuración</h2>
+            <button className="secundario" onClick={() => setEnConfig(false)}>Volver al stock</button>
+          </div>
+          <Configuracion
+            negocio={negocio}
+            usuario={usuario.email ?? ''}
+            puedeEditar={negocio.rol === 'admin' || superAdmin}
+          />
+        </main>
       ) : (
         <main>
           <nav className="tabs">
@@ -132,19 +164,16 @@ export default function App() {
             <button className={solapa === 'movimientos' ? 'activo' : ''} onClick={() => setSolapa('movimientos')}>
               Movimientos
             </button>
-            {superAdmin && (
-              <button className={solapa === 'miembros' ? 'activo' : ''} onClick={() => setSolapa('miembros')}>
-                Miembros
-              </button>
-            )}
           </nav>
           {solapa === 'productos' && (
-            <Productos negocioId={negocio.id} productos={productos} usuario={usuario.email ?? ''} />
+            <Productos
+              negocioId={negocio.id}
+              productos={productos}
+              usuario={usuario.email ?? ''}
+              config={configDe(negocio)}
+            />
           )}
           {solapa === 'movimientos' && <Movimientos movimientos={movimientos} />}
-          {solapa === 'miembros' && superAdmin && (
-            <Miembros negocioId={negocio.id} usuario={usuario.email ?? ''} />
-          )}
         </main>
       )}
 

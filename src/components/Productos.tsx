@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { Producto, ProductoNuevo } from '../types'
+import type { ConfigNegocio, Producto, ProductoNuevo } from '../types'
+import { formatearImporte } from '../formato'
 import { borrarProducto, crearProducto, editarProducto } from '../data/productos'
 import { registrarMovimiento, type AltaMovimiento } from '../data/movimientos'
 import { FormProducto } from './FormProducto'
@@ -10,6 +11,7 @@ interface Props {
   negocioId: string
   productos: Producto[]
   usuario: string
+  config: ConfigNegocio
 }
 
 type Dialogo =
@@ -18,7 +20,8 @@ type Dialogo =
   | { tipo: 'movimiento'; producto: Producto }
   | null
 
-export function Productos({ negocioId, productos, usuario }: Props) {
+export function Productos({ negocioId, productos, usuario, config }: Props) {
+  const importe = (v: number) => formatearImporte(v, config.moneda)
   const [busqueda, setBusqueda] = useState('')
   const [soloFaltantes, setSoloFaltantes] = useState(false)
   const [dialogo, setDialogo] = useState<Dialogo>(null)
@@ -77,7 +80,7 @@ export function Productos({ negocioId, productos, usuario }: Props) {
       </div>
 
       <p className="dato">
-        {productos.length} productos · valorizado ${valorStock.toLocaleString('es-AR')}
+        {productos.length} productos · valorizado {importe(valorStock)}
       </p>
 
       <table className="tabla-tarjetas">
@@ -101,8 +104,8 @@ export function Productos({ negocioId, productos, usuario }: Props) {
               </td>
               <td className="num" data-label="Stock">{p.stock} {p.unidad}</td>
               <td className="num" data-label="Mínimo">{p.minimo}</td>
-              <td className="num" data-label="Costo">${p.costo}</td>
-              <td className="num" data-label="Precio">${p.precio}</td>
+              <td className="num" data-label="Costo">{importe(p.costo)}</td>
+              <td className="num" data-label="Precio">{importe(p.precio)}</td>
               <td className="acciones-fila">
                 <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p })}>Mover</button>
                 <button className="secundario" onClick={() => setDialogo({ tipo: 'editar', producto: p })}>Editar</button>
@@ -121,6 +124,7 @@ export function Productos({ negocioId, productos, usuario }: Props) {
           {dialogo.tipo === 'movimiento' ? (
             <FormMovimiento
               producto={dialogo.producto}
+              moneda={config.moneda}
               usuario={usuario}
               onRegistrar={mover}
               onCancelar={() => setDialogo(null)}
@@ -128,6 +132,7 @@ export function Productos({ negocioId, productos, usuario }: Props) {
           ) : (
             <FormProducto
               producto={dialogo.tipo === 'editar' ? dialogo.producto : undefined}
+              config={config}
               onGuardar={guardar}
               onCancelar={() => setDialogo(null)}
             />
