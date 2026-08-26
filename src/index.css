@@ -144,8 +144,39 @@ th { color: var(--suave); font-weight: 500; font-size: 0.75rem; text-transform: 
 .num { text-align: right; }
 .negativo { color: var(--alerta); }
 tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
-.acciones-fila { display: flex; gap: 0.35rem; justify-content: flex-end; }
-.acciones-fila button { padding: 0.3rem 0.55rem; font-size: 0.8rem; }
+.acciones-fila { display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center; }
+.acciones-fila button { padding: 0.3rem 0.55rem; font-size: 0.8rem; white-space: nowrap; }
+
+/* Menú de acciones secundarias de cada producto. */
+.menu-acciones { position: relative; display: inline-flex; }
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  min-width: 11rem;
+  padding: 0.4rem;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px var(--sombra);
+}
+.menu-panel button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--texto);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.6rem;
+}
+.menu-panel button:hover { background: var(--fondo); }
+/* Borrar no se pone al lado de lo que se usa a diario, y se distingue del resto. */
+.menu-panel button.peligro { color: var(--alerta); }
 .vacio-fila { text-align: center; color: var(--suave); padding: 2rem; }
 .vacio-dato { color: var(--suave); }
 

@@ -4,24 +4,33 @@ import type { AltaMovimiento } from '../data/movimientos'
 
 interface Props {
   producto: Producto
-  /** Código de moneda del negocio, para mostrar el costo con su símbolo. */
-  moneda: string
+  /** El tipo lo elige el botón de la lista: entrada, retiro o ajuste. */
+  tipo: TipoMovimiento
   usuario: string
   onRegistrar: (mov: AltaMovimiento) => Promise<void>
   onCancelar: () => void
 }
 
-export function FormMovimiento({ producto, moneda, usuario, onRegistrar, onCancelar }: Props) {
-  const [tipo, setTipo] = useState<TipoMovimiento>('entrada')
+const TITULOS: Record<TipoMovimiento, string> = {
+  entrada: 'Entrada',
+  salida: 'Retiro',
+  ajuste: 'Ajuste de stock',
+}
+
+export function FormMovimiento({ producto, tipo, usuario, onRegistrar, onCancelar }: Props) {
   const [cantidad, setCantidad] = useState(0)
-  const [costo, setCosto] = useState(producto.costo)
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
 
+  const stock = producto.stock ?? 0
+  // Se avisa mientras escribe, sin esperar a que intente registrar.
+  const excede = tipo === 'salida' && cantidad > stock
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     if (tipo !== 'ajuste' && cantidad <= 0) return setError('La cantidad tiene que ser mayor a cero')
+    if (tipo === 'salida' && cantidad > stock) return setError(`No hay tanto stock: quedan ${stock}`)
     setError('')
     setGuardando(true)
     try {
@@ -30,7 +39,9 @@ export function FormMovimiento({ producto, moneda, usuario, onRegistrar, onCance
         nombre: producto.nombre,
         tipo,
         cantidad,
-        ...(tipo === 'entrada' ? { costo } : {}),
+        // El costo no se pregunta acá: se guarda el que tiene el producto, y si
+        // hace falta cambiarlo se hace en su ficha.
+        ...(tipo === 'entrada' && producto.costo ? { costo: producto.costo } : {}),
         ...(motivo.trim() ? { motivo: motivo.trim() } : {}),
         usuario,
       })
@@ -42,43 +53,39 @@ export function FormMovimiento({ producto, moneda, usuario, onRegistrar, onCance
 
   return (
     <form className="form" onSubmit={onSubmit}>
-      <h3>Movimiento — {producto.nombre}</h3>
-      <p className="dato">Stock actual: <strong>{producto.stock} {producto.unidad}</strong></p>
-      <div className="tabs">
-        {(['entrada', 'salida', 'ajuste'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            className={tipo === t ? 'activo' : ''}
-            onClick={() => setTipo(t)}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <h3>{TITULOS[tipo]} — {producto.nombre}</h3>
+      <p className="dato">Stock actual: <strong>{stock} {producto.unidad}</strong></p>
       <label>
         {tipo === 'ajuste' ? 'Stock real contado' : 'Cantidad'}
         <input
           type="number"
           step="any"
+          min={tipo === 'ajuste' ? undefined : 0}
           value={cantidad}
           onChange={(e) => setCantidad(Number(e.target.value))}
           autoFocus
         />
       </label>
-      {tipo === 'entrada' && (
-        <label>
-          Costo unitario ({moneda})
-          <input type="number" step="any" value={costo} onChange={(e) => setCosto(Number(e.target.value))} />
-        </label>
-      )}
+      {excede ? (
+        <p className="error">No hay tanto stock: quedan {stock} {producto.unidad}.</p>
+      ) : tipo !== 'ajuste' && cantidad > 0 ? (
+        <p className="dato">
+          Queda en <strong>{tipo === 'entrada' ? stock + cantidad : stock - cantidad} {producto.unidad}</strong>.
+        </p>
+      ) : null}
       <label>
         Motivo
-        <input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="opcional" />
+        <input
+          value={motivo}
+          onChange={(e) => setMotivo(e.target.value)}
+          placeholder={tipo === 'salida' ? 'venta, rotura…' : 'opcional'}
+        />
       </label>
       {error && <p className="error">{error}</p>}
       <div className="acciones">
-        <button type="submit" disabled={guardando}>Registrar</button>
+        <button type="submit" disabled={guardando || excede}>
+          {guardando ? 'Registrando…' : 'Registrar'}
+        </button>
         <button type="button" className="secundario" onClick={onCancelar}>Cancelar</button>
       </div>
     </form>

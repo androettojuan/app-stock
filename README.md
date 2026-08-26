@@ -38,6 +38,13 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
 - La foto se achica en el navegador (lado más largo a 800px, JPEG) antes de
   subirla: desde el teléfono se saca en varios MB y para la lista alcanza con
   una miniatura.
+- En la lista, cada producto tiene **+ Entrada** y **− Retirar**, que es lo del
+  día a día. Editar, ajustar stock y borrar viven en el menú «⋯», para que
+  borrar no quede al lado de lo que se toca a cada rato.
+- La entrada no pregunta el costo: se guarda el que tiene el producto. Después
+  de una entrada grande (la que suma al menos la mitad del stock que había, o
+  cualquiera sobre un producto en cero) se ofrece revisar costo y precio, que
+  es cuando de verdad suelen cambiar.
 - Los movimientos son histórico: se crean y no se editan. El stock del producto
   se corrige en la misma transacción que registra el movimiento, así dos cargas
   simultáneas no se pisan.

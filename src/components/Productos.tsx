@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
-import type { ConfigNegocio, Producto, ProductoNuevo } from '../types'
+import type { ConfigNegocio, Producto, ProductoNuevo, TipoMovimiento } from '../types'
 import { formatearImporte, importeOpcional, sinCargar } from '../formato'
 import { borrarProducto, crearProducto, editarProducto, guardarFotoProducto } from '../data/productos'
 import { borrarFoto, subirFoto } from '../data/fotos'
 import { registrarMovimiento, type AltaMovimiento } from '../data/movimientos'
 import { FormProducto, type CambioFoto } from './FormProducto'
+import { MenuAcciones } from './MenuAcciones'
 import { FormMovimiento } from './FormMovimiento'
+import { FormPrecios } from './FormPrecios'
 import { Modal } from './Modal'
 
 interface Props {
@@ -18,8 +20,17 @@ interface Props {
 type Dialogo =
   | { tipo: 'nuevo' }
   | { tipo: 'editar'; producto: Producto }
-  | { tipo: 'movimiento'; producto: Producto }
+  | { tipo: 'movimiento'; producto: Producto; movimiento: TipoMovimiento }
+  | { tipo: 'precios'; producto: Producto; cantidad: number }
   | null
+
+/**
+ * Una entrada es "grande" si suma al menos la mitad de lo que ya había, o si el
+ * producto estaba en cero: son los casos donde conviene mirar los precios.
+ */
+function esEntradaGrande(cantidad: number, stockPrevio: number) {
+  return stockPrevio <= 0 || cantidad >= stockPrevio / 2
+}
 
 export function Productos({ negocioId, productos, usuario, config }: Props) {
   const importe = (v: number) => formatearImporte(v, config.moneda)
@@ -65,7 +76,21 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
   }
 
   async function mover(mov: AltaMovimiento) {
+    const producto = dialogo?.tipo === 'movimiento' ? dialogo.producto : undefined
     await registrarMovimiento(negocioId, mov)
+
+    // Después de una reposición grande suele haber cambiado el costo, así que
+    // ofrecemos revisar los precios en vez de preguntarlo en cada entrada.
+    if (producto && mov.tipo === 'entrada' && esEntradaGrande(mov.cantidad, producto.stock ?? 0)) {
+      setDialogo({ tipo: 'precios', producto, cantidad: mov.cantidad })
+      return
+    }
+    setDialogo(null)
+  }
+
+  async function guardarPrecios(datos: { costo: number; precio: number }) {
+    if (dialogo?.tipo !== 'precios') return
+    await editarProducto(negocioId, dialogo.producto.id, datos)
     setDialogo(null)
   }
 
@@ -136,9 +161,24 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
                 {opcional(p.precio) ?? '—'}
               </td>
               <td className="acciones-fila">
-                <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p })}>Mover</button>
-                <button className="secundario" onClick={() => setDialogo({ tipo: 'editar', producto: p })}>Editar</button>
-                <button className="secundario" onClick={() => borrar(p)}>Borrar</button>
+                <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'entrada' })}>
+                  + Entrada
+                </button>
+                <button
+                  className="secundario"
+                  onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'salida' })}
+                  disabled={(p.stock ?? 0) <= 0}
+                  title={(p.stock ?? 0) <= 0 ? 'No hay stock para retirar' : undefined}
+                >
+                  − Retirar
+                </button>
+                <MenuAcciones etiqueta={`Más acciones de ${p.nombre}`}>
+                  <button onClick={() => setDialogo({ tipo: 'editar', producto: p })}>Editar</button>
+                  <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'ajuste' })}>
+                    Ajustar stock
+                  </button>
+                  <button className="peligro" onClick={() => borrar(p)}>Borrar</button>
+                </MenuAcciones>
               </td>
             </tr>
           ))}
@@ -153,9 +193,17 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
           {dialogo.tipo === 'movimiento' ? (
             <FormMovimiento
               producto={dialogo.producto}
-              moneda={config.moneda}
+              tipo={dialogo.movimiento}
               usuario={usuario}
               onRegistrar={mover}
+              onCancelar={() => setDialogo(null)}
+            />
+          ) : dialogo.tipo === 'precios' ? (
+            <FormPrecios
+              producto={dialogo.producto}
+              cantidad={dialogo.cantidad}
+              moneda={config.moneda}
+              onGuardar={guardarPrecios}
               onCancelar={() => setDialogo(null)}
             />
           ) : (
