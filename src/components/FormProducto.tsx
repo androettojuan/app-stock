@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import type { ConfigNegocio, Producto, ProductoNuevo } from '../types'
+import { useEsMovil } from '../hooks/useEsMovil'
 
 /** Qué hacer con la foto al guardar: dejarla como está, cambiarla o sacarla. */
 export type CambioFoto = { archivo?: File; quitar?: boolean }
@@ -35,6 +36,10 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
   const [archivo, setArchivo] = useState<File>()
   const [quitarFoto, setQuitarFoto] = useState(false)
   const inputFoto = useRef<HTMLInputElement>(null)
+  const inputCamara = useRef<HTMLInputElement>(null)
+  // La cámara se ofrece en el teléfono: en la computadora `capture` no hace
+  // nada y el botón terminaría abriendo el explorador de archivos igual.
+  const esMovil = useEsMovil()
 
   // Vista previa de la foto recién elegida, que todavía no está subida. La URL
   // se crea al elegir el archivo y se libera al reemplazarla o al cerrar.
@@ -53,11 +58,13 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
     setQuitarFoto(false)
   }
 
-  function sacarFoto() {
+  function quitar() {
     setArchivo(undefined)
     setPrevia(undefined)
     setQuitarFoto(true)
-    if (inputFoto.current) inputFoto.current.value = ''
+    for (const input of [inputFoto, inputCamara]) {
+      if (input.current) input.current.value = ''
+    }
   }
 
   function campo<K extends keyof ProductoNuevo>(k: K, v: ProductoNuevo[K]) {
@@ -90,6 +97,22 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
           ? <img className="foto-previa" src={fotoActual} alt={datos.nombre || 'Foto del producto'} />
           : <div className="foto-previa vacia" aria-hidden="true">Sin foto</div>}
         <div className="campo-foto-acciones">
+          {esMovil && (
+            <>
+              <input
+                ref={inputCamara}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                id="camara-producto"
+                className="oculto"
+                onChange={elegirFoto}
+              />
+              <label className="boton-archivo" htmlFor="camara-producto">
+                Sacar foto
+              </label>
+            </>
+          )}
           <input
             ref={inputFoto}
             type="file"
@@ -98,11 +121,13 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
             className="oculto"
             onChange={elegirFoto}
           />
-          <label className="boton-archivo" htmlFor="foto-producto">
-            {fotoActual ? 'Cambiar foto' : 'Elegir foto'}
+          <label className={`boton-archivo ${esMovil ? 'secundario' : ''}`} htmlFor="foto-producto">
+            {esMovil
+              ? (fotoActual ? 'Elegir otra de la galería' : 'Elegir de la galería')
+              : (fotoActual ? 'Cambiar foto' : 'Elegir foto')}
           </label>
           {fotoActual && (
-            <button type="button" className="secundario" onClick={sacarFoto}>Sacar foto</button>
+            <button type="button" className="secundario" onClick={quitar}>Quitar foto</button>
           )}
           <span className="dato">Se achica sola antes de subirla.</span>
         </div>

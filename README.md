@@ -35,8 +35,10 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
   negocio queda como miembro admin, si no nadie podría verlo.
 - Costo y precio son opcionales: el producto que no los tenga cargados no los
   muestra en la lista, en vez de mostrar un importe en cero.
-- La foto se achica en el navegador (lado más largo a 800px, JPEG) antes de
-  subirla: desde el teléfono se saca en varios MB. Se ve al costado de la
+- Desde el teléfono la foto se puede sacar en el momento con la cámara o
+  elegir de la galería; en la computadora se elige el archivo. Se achica en el
+  navegador (lado más largo a 800px, JPEG) antes de subirla, respetando la
+  orientación con que se sacó. Se ve al costado de la
   tarjeta o como miniatura en la tabla, y tocarla la abre en grande.
 - El teléfono no muestra la tabla achicada sino su propia tarjeta, con el
   stock grande y la foto al costado. Costo y mínimo quedan para la ficha del

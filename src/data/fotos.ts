@@ -12,7 +12,9 @@ const fotoRef = (negocioId: string, productoId: string) =>
  * una miniatura de producto alcanza con el lado más largo en 800px.
  */
 export async function achicar(archivo: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(archivo)
+  // `from-image` respeta la orientación EXIF: la foto sacada con el teléfono de
+  // costado se guarda derecha y no acostada.
+  const bitmap = await createImageBitmap(archivo, { imageOrientation: 'from-image' })
   const escala = Math.min(1, LADO_MAXIMO / Math.max(bitmap.width, bitmap.height))
   const ancho = Math.round(bitmap.width * escala)
   const alto = Math.round(bitmap.height * escala)

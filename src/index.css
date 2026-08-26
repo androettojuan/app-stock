@@ -277,12 +277,14 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
   display: inline-block;
   background: var(--acento);
   color: #fff;
+  border: 1px solid transparent;
   border-radius: 6px;
   padding: 0.5rem 0.9rem;
   font-size: 0.9rem;
   cursor: pointer;
   flex: 0 0 auto;
 }
+.boton-archivo.secundario { background: transparent; border-color: var(--borde); color: var(--texto); }
 
 .tag {
   display: inline-block;
