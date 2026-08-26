@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { IconoMenu } from './iconos'
 
 interface Props {
   email: string
@@ -37,7 +38,7 @@ export function MenuUsuario({ email, children }: Props) {
         aria-expanded={abierto}
         aria-label="Menú"
       >
-        ☰
+        <IconoMenu />
       </button>
       {/* Elegir una opción cierra el menú: son todas acciones de una sola vez. */}
       <div

@@ -11,6 +11,7 @@ import { Productos } from './components/Productos'
 import { Movimientos } from './components/Movimientos'
 import { Configuracion } from './components/Configuracion'
 import { MenuUsuario } from './components/MenuUsuario'
+import { IconoCambiar, IconoEngranaje, IconoLuna, IconoSalir, IconoSol } from './components/iconos'
 import { FormNegocio } from './components/FormNegocio'
 import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
@@ -112,7 +113,7 @@ export default function App() {
               aria-label="Configuración del negocio"
               aria-pressed={enConfig}
             >
-              ⚙<span className="etiqueta">Configuración</span>
+              <IconoEngranaje /><span className="etiqueta">Configuración</span>
             </button>
           )}
           <button
@@ -121,16 +122,16 @@ export default function App() {
             title={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
             aria-label={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
           >
-            {tema === 'oscuro' ? '☀' : '☾'}
+            {tema === 'oscuro' ? <IconoSol /> : <IconoLuna />}
             <span className="etiqueta">{tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro'}</span>
           </button>
           {negocio && negocios && negocios.length > 1 && (
             <button className="secundario" onClick={cambiarNegocio}>
-              <span className="solo-menu" aria-hidden="true">⇄</span>Cambiar negocio
+              <span className="solo-menu"><IconoCambiar /></span>Cambiar negocio
             </button>
           )}
           <button className="secundario" onClick={salir}>
-            <span className="solo-menu" aria-hidden="true">→</span>Salir
+            <span className="solo-menu"><IconoSalir /></span>Salir
           </button>
         </MenuUsuario>
       </header>

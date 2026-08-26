@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconoLuna, IconoSol } from './iconos'
 
 interface Props {
   entrar: () => Promise<unknown>
@@ -37,7 +38,7 @@ export function Login({ entrar, tema, onCambiarTema }: Props) {
           title={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
           aria-label={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
         >
-          {tema === 'oscuro' ? '☀' : '☾'}
+          {tema === 'oscuro' ? <IconoSol /> : <IconoLuna />}
         </button>
       </div>
       <p className="login-texto">Entrá con tu cuenta de Google para ver tus negocios.</p>

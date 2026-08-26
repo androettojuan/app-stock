@@ -53,7 +53,16 @@ button {
 }
 button:disabled { opacity: 0.5; cursor: default; }
 button.secundario { background: transparent; border: 1px solid var(--borde); color: var(--texto); }
-button.icono { padding: 0.4rem 0.6rem; font-size: 1rem; line-height: 1; }
+/* Caja fija: el botón mide lo mismo con cualquier icono adentro. */
+button.icono {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
 
 input, select {
   background: var(--panel);
@@ -91,8 +100,9 @@ header > div { display: flex; align-items: center; gap: 0.5rem; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* El botón del menú, las etiquetas y los iconos del panel son solo del teléfono. */
-.solo-movil { display: none; }
+/* El botón del menú, las etiquetas y los iconos del panel son solo del teléfono.
+   Lleva `button` adelante para pisar el display de los botones con icono. */
+button.solo-movil { display: none; }
 .etiqueta { display: none; }
 .solo-menu { display: none; }
 
@@ -384,7 +394,7 @@ input:disabled, select:disabled { opacity: 0.6; cursor: default; }
   header > div:first-child { min-width: 0; }
   header h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .solo-movil { display: inline-flex; }
+  button.solo-movil { display: inline-flex; }
 
   .header-acciones {
     display: none;
@@ -421,8 +431,11 @@ input:disabled, select:disabled { opacity: 0.6; cursor: default; }
   }
   .header-acciones button.activo { background: var(--acento); }
   .header-acciones .etiqueta { display: inline; }
-  /* Ancho fijo para el icono: así todas las opciones alinean su texto. */
-  .header-acciones .solo-menu { display: inline-block; width: 1.1rem; text-align: center; }
+  /* Todos los iconos ocupan lo mismo, así el texto de cada opción arranca en
+     la misma columna. */
+  .header-acciones .solo-menu { display: inline-flex; }
+  .header-acciones button > svg,
+  .header-acciones button > .solo-menu > svg { flex: 0 0 18px; }
 
   /* En el teléfono las solapas se reparten el ancho de la pantalla. */
   .tabs button { flex: 1; }
