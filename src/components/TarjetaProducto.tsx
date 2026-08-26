@@ -1,5 +1,6 @@
 import type { ConfigNegocio, Producto } from '../types'
 import { importeOpcional, sinCargar } from '../formato'
+import { estaBajoMinimo } from '../stock'
 import { MenuAcciones } from './MenuAcciones'
 
 interface Props {
@@ -28,7 +29,7 @@ export function TarjetaProducto({
   onVerFoto,
 }: Props) {
   const stock = p.stock ?? 0
-  const bajoMinimo = !sinCargar(p.minimo) && stock <= p.minimo
+  const bajoMinimo = estaBajoMinimo(p)
   const precio = importeOpcional(p.precio, config.moneda)
 
   return (

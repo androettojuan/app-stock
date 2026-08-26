@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { ConfigNegocio, Producto, ProductoNuevo, TipoMovimiento } from '../types'
 import { formatearImporte, importeOpcional, sinCargar } from '../formato'
+import { estaBajoMinimo } from '../stock'
 import { borrarProducto, crearProducto, editarProducto, guardarFotoProducto } from '../data/productos'
 import { borrarFoto, subirFoto } from '../data/fotos'
 import { registrarMovimiento, type AltaMovimiento } from '../data/movimientos'
@@ -47,7 +48,7 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
   const visibles = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
     return productos.filter((p) => {
-      if (soloFaltantes && p.stock > p.minimo) return false
+      if (soloFaltantes && !estaBajoMinimo(p)) return false
       if (!texto) return true
       return (
         p.nombre.toLowerCase().includes(texto) ||
@@ -119,13 +120,18 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
             checked={soloFaltantes}
             onChange={(e) => setSoloFaltantes(e.target.checked)}
           />
-          Bajo mínimo
+          Ver productos con stock bajo
         </label>
         <button onClick={() => setDialogo({ tipo: 'nuevo' })}>+ Producto</button>
       </div>
 
       <p className="dato">
-        {productos.length} productos · valorizado {importe(valorStock)}
+        {visibles.length === productos.length
+          ? `${productos.length} productos`
+          : `${visibles.length} de ${productos.length} productos`}
+        {' · valorizado '}
+        {importe(valorStock)}
+        {visibles.length === productos.length ? '' : ' en total'}
       </p>
 
       {esMovil ? (
@@ -159,7 +165,7 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
           </thead>
           <tbody>
             {visibles.map((p) => (
-              <tr key={p.id} className={p.stock <= p.minimo ? 'alerta' : ''}>
+              <tr key={p.id} className={estaBajoMinimo(p) ? 'alerta' : ''}>
                 <td className="celda-principal">
                   <div className="producto-nombre">
                     {p.foto ? (
