@@ -11,7 +11,7 @@ import { Productos } from './components/Productos'
 import { Movimientos } from './components/Movimientos'
 import { Configuracion } from './components/Configuracion'
 import { MenuUsuario } from './components/MenuUsuario'
-import { IconoCambiar, IconoEngranaje, IconoLuna, IconoSalir, IconoSol } from './components/iconos'
+import { IconoCambiar, IconoEngranaje, IconoLuna, IconoMas, IconoSalir, IconoSol } from './components/iconos'
 import { FormNegocio } from './components/FormNegocio'
 import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
@@ -128,6 +128,13 @@ export default function App() {
             {tema === 'oscuro' ? <IconoSol /> : <IconoLuna />}
             <span className="etiqueta">{tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro'}</span>
           </button>
+          {/* El alta va acá y no solo en el selector: con un negocio único no
+              se pasa por esa pantalla y no habría por dónde crear otro. */}
+          {superAdmin && (
+            <button className="secundario" onClick={() => setCreandoNegocio(true)}>
+              <span className="solo-menu"><IconoMas /></span>Nuevo negocio
+            </button>
+          )}
           {negocio && negocios && negocios.length > 1 && (
             <button className="secundario" onClick={cambiarNegocio}>
               <span className="solo-menu"><IconoCambiar /></span>Cambiar negocio
