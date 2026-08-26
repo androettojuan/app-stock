@@ -421,6 +421,10 @@ input:disabled, select:disabled { opacity: 0.6; cursor: default; }
   }
   .header-acciones button {
     width: 100%;
+    height: auto;
+    /* Mismo padding para todos, tengan o no la clase de botón con icono: si no,
+       unos arrancan pegados al borde y otros a 0.9rem. */
+    padding: 0.5rem 0.6rem;
     justify-content: flex-start;
     display: flex;
     align-items: center;
