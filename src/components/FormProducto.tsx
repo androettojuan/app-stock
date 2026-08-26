@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import type { ConfigNegocio, Producto, ProductoNuevo } from '../types'
 import { useEsMovil } from '../hooks/useEsMovil'
+import { CampoConOpciones } from './CampoConOpciones'
 
 /** Qué hacer con la foto al guardar: dejarla como está, cambiarla o sacarla. */
 export type CambioFoto = { archivo?: File; quitar?: boolean }
@@ -137,28 +138,21 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
           SKU
           <input value={datos.sku ?? ''} onChange={(e) => campo('sku', e.target.value)} />
         </label>
-        <label>
-          Categoría
-          <input
-            value={datos.categoria ?? ''}
-            onChange={(e) => campo('categoria', e.target.value)}
-            list="categorias-negocio"
-          />
-          <datalist id="categorias-negocio">
-            {config.categorias.map((c) => <option key={c} value={c} />)}
-          </datalist>
-        </label>
-        <label>
-          Unidad
-          <input
-            value={datos.unidad}
-            onChange={(e) => campo('unidad', e.target.value)}
-            list="unidades-negocio"
-          />
-          <datalist id="unidades-negocio">
-            {config.unidades.map((u) => <option key={u} value={u} />)}
-          </datalist>
-        </label>
+        <CampoConOpciones
+          etiqueta="Categoría"
+          valor={datos.categoria ?? ''}
+          opciones={config.categorias}
+          onCambiar={(v) => campo('categoria', v)}
+          placeholder="bebidas, limpieza…"
+          vacio="Sin categoría"
+        />
+        <CampoConOpciones
+          etiqueta="Unidad"
+          valor={datos.unidad}
+          opciones={config.unidades}
+          onCambiar={(v) => campo('unidad', v)}
+          placeholder="u, kg, caja…"
+        />
       </div>
       <div className="fila">
         {!producto && (
