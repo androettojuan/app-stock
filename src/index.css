@@ -83,13 +83,18 @@ header {
   border-bottom: 1px solid var(--borde);
 }
 header > div { display: flex; align-items: center; gap: 0.5rem; }
-.header-acciones { flex-wrap: wrap; justify-content: flex-end; }
+.menu-usuario { display: flex; align-items: center; gap: 0.5rem; position: relative; }
+.header-acciones { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
 .header-acciones .email {
   max-width: 45vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* El botón del menú, las etiquetas y los iconos del panel son solo del teléfono. */
+.solo-movil { display: none; }
+.etiqueta { display: none; }
+.solo-menu { display: none; }
 
 .cargando, .vacio { padding: 3rem 1rem; text-align: center; color: var(--suave); }
 
@@ -280,8 +285,50 @@ input:disabled, select:disabled { opacity: 0.6; cursor: default; }
 @media (max-width: 720px) {
   .app { padding: 0.75rem; }
 
-  header { align-items: flex-start; }
-  .header-acciones .email { max-width: 100%; }
+  /* El encabezado queda en un renglón: el negocio y, a la derecha, el menú. */
+  header { align-items: center; flex-wrap: nowrap; }
+  header > div:first-child { min-width: 0; }
+  header h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .solo-movil { display: inline-flex; }
+
+  .header-acciones {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 10;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    min-width: 15rem;
+    max-width: 80vw;
+    padding: 0.5rem;
+    background: var(--panel);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px var(--sombra);
+  }
+  .header-acciones.abierto { display: flex; }
+  .header-acciones .email {
+    max-width: 100%;
+    padding: 0.3rem 0.5rem 0.5rem;
+    border-bottom: 1px solid var(--borde);
+  }
+  .header-acciones button {
+    width: 100%;
+    justify-content: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+  }
+  .header-acciones button.activo { background: var(--acento); }
+  .header-acciones .etiqueta { display: inline; }
+  /* Ancho fijo para el icono: así todas las opciones alinean su texto. */
+  .header-acciones .solo-menu { display: inline-block; width: 1.1rem; text-align: center; }
 
   /* En el teléfono las solapas se reparten el ancho de la pantalla. */
   .tabs button { flex: 1; }

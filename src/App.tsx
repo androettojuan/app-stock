@@ -10,6 +10,7 @@ import { SelectorNegocio } from './components/SelectorNegocio'
 import { Productos } from './components/Productos'
 import { Movimientos } from './components/Movimientos'
 import { Configuracion } from './components/Configuracion'
+import { MenuUsuario } from './components/MenuUsuario'
 import { FormNegocio } from './components/FormNegocio'
 import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
@@ -102,8 +103,7 @@ export default function App() {
           <h1>{negocio?.nombre ?? 'app-stock'}</h1>
           {usaEmulador && <span className="tag emulador">emulador</span>}
         </div>
-        <div className="header-acciones">
-          <span className="dato email">{usuario.email}</span>
+        <MenuUsuario email={usuario.email ?? ''}>
           {negocio && (
             <button
               className={`secundario icono ${enConfig ? 'activo' : ''}`}
@@ -112,7 +112,7 @@ export default function App() {
               aria-label="Configuración del negocio"
               aria-pressed={enConfig}
             >
-              ⚙
+              ⚙<span className="etiqueta">Configuración</span>
             </button>
           )}
           <button
@@ -122,12 +122,17 @@ export default function App() {
             aria-label={tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
           >
             {tema === 'oscuro' ? '☀' : '☾'}
+            <span className="etiqueta">{tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro'}</span>
           </button>
           {negocio && negocios && negocios.length > 1 && (
-            <button className="secundario" onClick={cambiarNegocio}>Cambiar negocio</button>
+            <button className="secundario" onClick={cambiarNegocio}>
+              <span className="solo-menu" aria-hidden="true">⇄</span>Cambiar negocio
+            </button>
           )}
-          <button className="secundario" onClick={salir}>Salir</button>
-        </div>
+          <button className="secundario" onClick={salir}>
+            <span className="solo-menu" aria-hidden="true">→</span>Salir
+          </button>
+        </MenuUsuario>
       </header>
 
       {error && <p className="error">{error}</p>}
