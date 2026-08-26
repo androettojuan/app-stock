@@ -221,6 +221,13 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
   font-size: 0.95rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
+  /* Dos líneas siempre: las tarjetas quedan todas del mismo alto, tenga el
+     producto un nombre corto o uno de ferretería. */
+  min-height: 2.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .tp-stock { margin: 0; font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
 .tp-stock strong { font-weight: 700; }
@@ -229,6 +236,8 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
 .tp-leyenda { margin-left: 0.4rem; font-size: 0.75rem; font-weight: 400; color: var(--suave); }
 .tp-detalle {
   margin: 0.15rem 0 0;
+  /* El renglón se reserva aunque el producto no tenga precio ni mínimo. */
+  min-height: 1.1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
@@ -247,6 +256,16 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
   align-self: start;
 }
 .tp-foto img { width: 84px; height: 84px; object-fit: cover; display: block; }
+.tp-foto.vacia {
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--suave);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
 
 .tp-acciones {
   grid-column: 1 / -1;

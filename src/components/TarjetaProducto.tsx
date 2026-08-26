@@ -35,11 +35,9 @@ export function TarjetaProducto({
   return (
     <article className={`tarjeta-producto ${bajoMinimo ? 'alerta' : ''}`}>
       <div className="tp-datos">
-        <h3>
-          {p.nombre}
-          {p.categoria && <span className="tag">{p.categoria}</span>}
-          {!p.activo && <span className="tag">inactivo</span>}
-        </h3>
+        {/* Hasta dos líneas, y el alto se reserva aunque el nombre sea corto:
+            si no, la tarjeta cambia de alto según el largo del nombre. */}
+        <h3>{p.nombre}</h3>
         <p className="tp-stock">
           <strong>{stock}</strong> {p.unidad}
           <span className="tp-leyenda">en stock</span>
@@ -49,12 +47,19 @@ export function TarjetaProducto({
           {!sinCargar(p.minimo) && (
             <span className={bajoMinimo ? 'negativo' : ''}>mín {p.minimo}</span>
           )}
+          {!p.activo && <span>inactivo</span>}
         </p>
       </div>
 
-      {p.foto && (
+      {/* El recuadro está siempre, tenga foto o no: si no, las tarjetas de la
+          lista quedan de distinto alto. Sin foto, invita a cargarla. */}
+      {p.foto ? (
         <button className="tp-foto" onClick={onVerFoto} aria-label={`Ver la foto de ${p.nombre}`}>
           <img src={p.foto} alt="" loading="lazy" />
+        </button>
+      ) : (
+        <button className="tp-foto vacia" onClick={onEditar} aria-label={`Agregar una foto a ${p.nombre}`}>
+          Sin foto
         </button>
       )}
 
