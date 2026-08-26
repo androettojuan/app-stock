@@ -12,7 +12,8 @@
     "emulators": "firebase emulators:start",
     "db:seed": "node scripts/seed-emulator.mjs",
     "test:rules": "node scripts/probar-reglas.mjs",
-    "test:rules:storage": "node scripts/probar-reglas-storage.mjs"
+    "test:rules:storage": "node scripts/probar-reglas-storage.mjs",
+    "superadmin": "node scripts/alta-superadmin.mjs"
   },
   "dependencies": {
     "firebase": "^12.17.1",

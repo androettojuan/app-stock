@@ -98,10 +98,19 @@ Una sola vez, desde la consola del proyecto (`stock-app-b7a37`):
 2. **Authentication → Settings → Authorized domains**: agregar el dominio donde
    se publique (`localhost` ya viene habilitado).
 3. **Firestore** y **Storage**: crear la base de datos y el bucket.
-4. Dar de alta el primer super admin a mano: colección `superAdmins`, documento
-   con id igual al email, campo `email` con ese mismo valor. Es el único paso
-   que se hace desde la consola: el super admin ya crea negocios con **+
-   Negocio**, y cada dueño configura el suyo desde el ⚙ del encabezado.
+4. Dar de alta el primer super admin. Desde el proyecto:
+
+   ```bash
+   npm run superadmin -- alguien@gmail.com        # alta
+   npm run superadmin -- alguien@gmail.com --baja # baja
+   npm run superadmin                             # ver quiénes son
+   ```
+
+   O a mano en la consola: colección `superAdmins`, documento con id igual al
+   email y un campo `email` con ese mismo valor. Es lo único que no se hace
+   desde la app —las reglas prohíben escribir esa colección, que es la llave
+   para crear negocios—. Con eso ya se crean negocios con **+ Negocio**, y cada
+   dueño configura el suyo desde el ⚙ del encabezado.
 5. Publicar reglas e índices:
    `firebase deploy --only firestore:rules,firestore:indexes,storage`.
 
