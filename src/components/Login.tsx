@@ -30,7 +30,8 @@ export function Login({ entrar, tema, onCambiarTema }: Props) {
   return (
     <div className="login">
       <div className="login-titulo">
-        <h1>app-stock</h1>
+        <img className="logo" src="/icon-192.png" alt="" width="40" height="40" />
+        <h1>Stockia</h1>
         <button
           type="button"
           className="secundario icono"

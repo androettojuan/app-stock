@@ -10,7 +10,7 @@ process.env.FIREBASE_AUTH_EMULATOR_HOST ??= '127.0.0.1:9099'
 
 // El login es con Google: alcanza con el email. En el emulador el popup deja
 // entrar con cualquier cuenta, así que este email es el que hay que usar ahí.
-const EMAIL = process.env.SEED_EMAIL ?? 'demo@app-stock.test'
+const EMAIL = process.env.SEED_EMAIL ?? 'demo@stockia.test'
 
 // Mismo proyecto que usan los emuladores, así el seed cae en el namespace correcto.
 const proyecto =

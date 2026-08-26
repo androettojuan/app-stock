@@ -17,7 +17,9 @@ import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
 import type { Movimiento, Negocio, Producto } from './types'
 
-const CLAVE_NEGOCIO = 'app-stock:negocio'
+const CLAVE_NEGOCIO = 'stockia:negocio'
+/** Se llamaba app-stock: se lee una vez para no perder el negocio elegido. */
+const CLAVE_NEGOCIO_VIEJA = 'app-stock:negocio'
 
 type Solapa = 'productos' | 'movimientos'
 
@@ -50,7 +52,8 @@ export default function App() {
       .then((lista) => {
         if (!vigente) return
         setNegocios(lista)
-        const guardado = localStorage.getItem(CLAVE_NEGOCIO)
+        const guardado =
+          localStorage.getItem(CLAVE_NEGOCIO) ?? localStorage.getItem(CLAVE_NEGOCIO_VIEJA)
         const elegido = lista.find((n) => n.id === guardado)
         if (elegido) setNegocio(elegido)
         else if (lista.length === 1) setNegocio(lista[0])
@@ -101,7 +104,7 @@ export default function App() {
     <div className="app">
       <header>
         <div>
-          <h1>{negocio?.nombre ?? 'app-stock'}</h1>
+          <h1>{negocio?.nombre ?? 'Stockia'}</h1>
           {usaEmulador && <span className="tag emulador">emulador</span>}
         </div>
         <MenuUsuario email={usuario.email ?? ''}>

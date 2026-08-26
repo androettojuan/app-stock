@@ -1,4 +1,4 @@
-# app-stock
+# Stockia
 
 Control de stock multi-negocio: cada negocio tiene sus productos y su histórico
 de movimientos, y un mismo usuario puede pertenecer a varios.
@@ -81,7 +81,7 @@ rechazaban todas las subidas. Evalúa el archivo con la API de Firebase Rules,
 la misma que corre en producción, sin subir ni tocar nada.
 
 El seed da de alta un email como super admin y miembro de los dos negocios. Por
-defecto es `demo@app-stock.test`; en el emulador el popup de Google deja entrar
+defecto es `demo@stockia.test`; en el emulador el popup de Google deja entrar
 con cualquier cuenta, así que conviene sembrar la que vayas a usar:
 
 ```bash
