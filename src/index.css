@@ -180,6 +180,61 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
 .vacio-fila { text-align: center; color: var(--suave); padding: 2rem; }
 .vacio-dato { color: var(--suave); }
 
+/* Tarjeta de producto del teléfono: el stock grande, la foto al costado y las
+   dos acciones de siempre al pie. */
+.lista-tarjetas { display: flex; flex-direction: column; gap: 0.6rem; }
+.tarjeta-producto {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+.tarjeta-producto.alerta { border-left: 3px solid var(--alerta); }
+.tp-datos { min-width: 0; }
+.tarjeta-producto h3 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.tp-stock { margin: 0; font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.tp-stock strong { font-weight: 700; }
+.tp-stock,
+.tp-stock strong { font-variant-numeric: tabular-nums; }
+.tp-leyenda { margin-left: 0.4rem; font-size: 0.75rem; font-weight: 400; color: var(--suave); }
+.tp-detalle {
+  margin: 0.15rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  color: var(--suave);
+  font-size: 0.85rem;
+}
+
+.tp-foto {
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--fondo);
+  min-height: 0;
+  overflow: hidden;
+  line-height: 0;
+  align-self: start;
+}
+.tp-foto img { width: 84px; height: 84px; object-fit: cover; display: block; }
+
+.tp-acciones {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.tp-acciones > button:first-child,
+.tp-acciones > button:nth-child(2) { flex: 1; }
+
 /* Foto del producto: miniatura en la lista, previa más grande en el formulario. */
 .producto-nombre { display: flex; align-items: center; gap: 0.6rem; }
 .miniatura {

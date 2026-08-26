@@ -36,9 +36,11 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
 - Costo y precio son opcionales: el producto que no los tenga cargados no los
   muestra en la lista, en vez de mostrar un importe en cero.
 - La foto se achica en el navegador (lado más largo a 800px, JPEG) antes de
-  subirla: desde el teléfono se saca en varios MB. En el teléfono se ve a todo
-  el ancho de la tarjeta, en la computadora como miniatura, y tocarla la abre
-  en grande.
+  subirla: desde el teléfono se saca en varios MB. Se ve al costado de la
+  tarjeta o como miniatura en la tabla, y tocarla la abre en grande.
+- El teléfono no muestra la tabla achicada sino su propia tarjeta, con el
+  stock grande y la foto al costado. Costo y mínimo quedan para la ficha del
+  producto: en la lista pesan más de lo que aportan.
 - En la lista, cada producto tiene **+ Entrada** y **− Retirar**, que es lo del
   día a día. Editar, ajustar stock y borrar viven en el menú «⋯», para que
   borrar no quede al lado de lo que se toca a cada rato.

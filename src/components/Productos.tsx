@@ -6,6 +6,8 @@ import { borrarFoto, subirFoto } from '../data/fotos'
 import { registrarMovimiento, type AltaMovimiento } from '../data/movimientos'
 import { FormProducto, type CambioFoto } from './FormProducto'
 import { MenuAcciones } from './MenuAcciones'
+import { TarjetaProducto } from './TarjetaProducto'
+import { useEsMovil } from '../hooks/useEsMovil'
 import { FormMovimiento } from './FormMovimiento'
 import { FormPrecios } from './FormPrecios'
 import { Modal } from './Modal'
@@ -34,6 +36,7 @@ function esEntradaGrande(cantidad: number, stockPrevio: number) {
 }
 
 export function Productos({ negocioId, productos, usuario, config }: Props) {
+  const esMovil = useEsMovil()
   const importe = (v: number) => formatearImporte(v, config.moneda)
   // Costo y precio son opcionales: si no los cargaron, no se muestra la fila.
   const opcional = (v: number | undefined) => importeOpcional(v, config.moneda)
@@ -125,78 +128,97 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
         {productos.length} productos · valorizado {importe(valorStock)}
       </p>
 
-      <table className="tabla-tarjetas">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th className="num">Stock</th>
-            <th className="num">Mínimo</th>
-            <th className="num">Costo</th>
-            <th className="num">Precio</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
+      {esMovil ? (
+        <div className="lista-tarjetas">
           {visibles.map((p) => (
-            <tr key={p.id} className={p.stock <= p.minimo ? 'alerta' : ''}>
-              <td className="celda-principal">
-                <div className="producto-nombre">
-                  {p.foto ? (
-                    <button
-                      className="miniatura-boton"
-                      onClick={() => setDialogo({ tipo: 'foto', producto: p })}
-                      title="Ver la foto más grande"
-                      aria-label={`Ver la foto de ${p.nombre}`}
-                    >
-                      <img className="miniatura" src={p.foto} alt="" loading="lazy" />
-                    </button>
-                  ) : (
-                    <div className="miniatura vacia" aria-hidden="true" />
-                  )}
-                  <div>
-                    <strong>{p.nombre}</strong>
-                    {p.categoria && <span className="tag">{p.categoria}</span>}
-                    {!p.activo && <span className="tag gris">inactivo</span>}
-                  </div>
-                </div>
-              </td>
-              <td className="num" data-label="Stock">{p.stock ?? 0} {p.unidad}</td>
-              <td className={`num ${sinCargar(p.minimo) ? 'vacio-dato' : ''}`} data-label="Mínimo">
-                {sinCargar(p.minimo) ? '—' : p.minimo}
-              </td>
-              <td className={`num ${opcional(p.costo) ? '' : 'vacio-dato'}`} data-label="Costo">
-                {opcional(p.costo) ?? '—'}
-              </td>
-              <td className={`num ${opcional(p.precio) ? '' : 'vacio-dato'}`} data-label="Precio">
-                {opcional(p.precio) ?? '—'}
-              </td>
-              <td className="acciones-fila">
-                <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'entrada' })}>
-                  + Entrada
-                </button>
-                <button
-                  className="secundario"
-                  onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'salida' })}
-                  disabled={(p.stock ?? 0) <= 0}
-                  title={(p.stock ?? 0) <= 0 ? 'No hay stock para retirar' : undefined}
-                >
-                  − Retirar
-                </button>
-                <MenuAcciones etiqueta={`Más acciones de ${p.nombre}`}>
-                  <button onClick={() => setDialogo({ tipo: 'editar', producto: p })}>Editar</button>
-                  <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'ajuste' })}>
-                    Ajustar stock
-                  </button>
-                  <button className="peligro" onClick={() => borrar(p)}>Borrar</button>
-                </MenuAcciones>
-              </td>
-            </tr>
+            <TarjetaProducto
+              key={p.id}
+              producto={p}
+              config={config}
+              onEntrada={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'entrada' })}
+              onRetiro={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'salida' })}
+              onEditar={() => setDialogo({ tipo: 'editar', producto: p })}
+              onAjustar={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'ajuste' })}
+              onBorrar={() => borrar(p)}
+              onVerFoto={() => setDialogo({ tipo: 'foto', producto: p })}
+            />
           ))}
-          {visibles.length === 0 && (
-            <tr><td colSpan={6} className="vacio-fila">No hay productos que coincidan</td></tr>
-          )}
-        </tbody>
-      </table>
+          {visibles.length === 0 && <p className="vacio">No hay productos que coincidan</p>}
+        </div>
+      ) : (
+      <table className="tabla-tarjetas">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th className="num">Stock</th>
+              <th className="num">Mínimo</th>
+              <th className="num">Costo</th>
+              <th className="num">Precio</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {visibles.map((p) => (
+              <tr key={p.id} className={p.stock <= p.minimo ? 'alerta' : ''}>
+                <td className="celda-principal">
+                  <div className="producto-nombre">
+                    {p.foto ? (
+                      <button
+                        className="miniatura-boton"
+                        onClick={() => setDialogo({ tipo: 'foto', producto: p })}
+                        title="Ver la foto más grande"
+                        aria-label={`Ver la foto de ${p.nombre}`}
+                      >
+                        <img className="miniatura" src={p.foto} alt="" loading="lazy" />
+                      </button>
+                    ) : (
+                      <div className="miniatura vacia" aria-hidden="true" />
+                    )}
+                    <div>
+                      <strong>{p.nombre}</strong>
+                      {p.categoria && <span className="tag">{p.categoria}</span>}
+                      {!p.activo && <span className="tag gris">inactivo</span>}
+                    </div>
+                  </div>
+                </td>
+                <td className="num" data-label="Stock">{p.stock ?? 0} {p.unidad}</td>
+                <td className={`num ${sinCargar(p.minimo) ? 'vacio-dato' : ''}`} data-label="Mínimo">
+                  {sinCargar(p.minimo) ? '—' : p.minimo}
+                </td>
+                <td className={`num ${opcional(p.costo) ? '' : 'vacio-dato'}`} data-label="Costo">
+                  {opcional(p.costo) ?? '—'}
+                </td>
+                <td className={`num ${opcional(p.precio) ? '' : 'vacio-dato'}`} data-label="Precio">
+                  {opcional(p.precio) ?? '—'}
+                </td>
+                <td className="acciones-fila">
+                  <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'entrada' })}>
+                    + Entrada
+                  </button>
+                  <button
+                    className="secundario"
+                    onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'salida' })}
+                    disabled={(p.stock ?? 0) <= 0}
+                    title={(p.stock ?? 0) <= 0 ? 'No hay stock para retirar' : undefined}
+                  >
+                    − Retirar
+                  </button>
+                  <MenuAcciones etiqueta={`Más acciones de ${p.nombre}`}>
+                    <button onClick={() => setDialogo({ tipo: 'editar', producto: p })}>Editar</button>
+                    <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'ajuste' })}>
+                      Ajustar stock
+                    </button>
+                    <button className="peligro" onClick={() => borrar(p)}>Borrar</button>
+                  </MenuAcciones>
+                </td>
+              </tr>
+            ))}
+            {visibles.length === 0 && (
+              <tr><td colSpan={6} className="vacio-fila">No hay productos que coincidan</td></tr>
+            )}
+          </tbody>
+        </table>
+      )}
 
       {dialogo && (
         <Modal onCerrar={() => setDialogo(null)}>
@@ -212,6 +234,9 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
             <figure className="foto-grande">
               <img src={dialogo.producto.foto} alt={dialogo.producto.nombre} />
               <figcaption>{dialogo.producto.nombre}</figcaption>
+              <div className="acciones">
+                <button className="secundario" onClick={() => setDialogo(null)}>Cerrar</button>
+              </div>
             </figure>
           ) : dialogo.tipo === 'precios' ? (
             <FormPrecios
