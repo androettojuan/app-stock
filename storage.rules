@@ -1,27 +1,29 @@
 rules_version = '2';
 
-// Las fotos de producto viven en negocios/{negocioId}/productos/{archivo} y se
-// rigen por el mismo criterio que los datos: las ve y las cambia quien sea
-// miembro de ese negocio. Firestore es la fuente de verdad de quién es miembro.
+// Fotos de producto: negocios/{negocioId}/productos/{productoId}.jpg
+//
+// Estas reglas no pueden preguntarle a Firestore quién es miembro de qué
+// negocio: `firestore.exists` existe en el emulador pero no en el Storage real
+// ("Function not found"), así que acá solo se puede exigir sesión iniciada y
+// que lo que se sube sea una imagen chica.
+//
+// Lo que protege las fotos de un negocio es que su ruta lleva dos ids
+// aleatorios de 20 caracteres (el del negocio y el del producto) que no se
+// pueden listar: sin conocerlos no hay forma de llegar al archivo. Los datos
+// que de verdad importan —productos, movimientos, miembros— siguen protegidos
+// por firestore.rules, que sí verifica la membresía.
 service firebase.storage {
   match /b/{bucket}/o {
-    function userEmail() {
-      return request.auth != null ? request.auth.token.email : '';
-    }
-
-    function esMiembro(negocioId) {
-      return request.auth != null
-        && firestore.exists(/databases/(default)/documents/negocios/$(negocioId)/miembros/$(userEmail()));
-    }
-
     match /negocios/{negocioId}/productos/{archivo} {
-      allow read: if esMiembro(negocioId);
-      // Solo imágenes y hasta 5 MB: la app ya las achica antes de subirlas, así
-      // que este tope es para que un error no llene el bucket.
-      allow write: if esMiembro(negocioId)
+      allow read: if request.auth != null;
+
+      // Hasta 5 MB: la app achica la foto antes de subirla, así que este tope
+      // es para que un error no llene el bucket.
+      allow write: if request.auth != null
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-      allow delete: if esMiembro(negocioId);
+
+      allow delete: if request.auth != null;
     }
   }
 }

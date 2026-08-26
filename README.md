@@ -35,6 +35,11 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
   negocio queda como miembro admin, si no nadie podría verlo.
 - Costo y precio son opcionales: el producto que no los tenga cargados no los
   muestra en la lista, en vez de mostrar un importe en cero.
+- Las reglas de Storage solo exigen sesión iniciada, tamaño y que sea imagen:
+  no pueden consultar Firestore, así que no hay forma de verificar ahí la
+  membresía. Lo que resguarda las fotos es que su ruta lleva dos ids aleatorios
+  que no se pueden listar; los datos del negocio siguen protegidos por
+  `firestore.rules`.
 - Desde el teléfono la foto se puede sacar en el momento con la cámara o
   elegir de la galería; en la computadora se elige el archivo. Se achica en el
   navegador (lado más largo a 800px, JPEG) antes de subirla, respetando la
@@ -63,11 +68,17 @@ cp .env.example .env      # completar con los datos del proyecto Firebase
 npm run emulators         # terminal 1: Auth + Firestore locales
 npm run db:seed           # terminal 2 (una vez): datos de prueba
 npm run dev:emulator      # terminal 2: la app apuntando al emulador
-npm run test:rules        # comprueba firestore.rules contra el emulador
+npm run test:rules            # firestore.rules contra el emulador
+npm run test:rules:storage    # storage.rules contra el motor real de Firebase
 ```
 
-`npm run test:rules` arma un negocio de prueba y verifica quién puede hacer
-qué: conviene correrlo después de tocar `firestore.rules` o `storage.rules`.
+`npm run test:rules` arma un negocio de prueba y verifica quién puede hacer qué.
+
+`npm run test:rules:storage` va aparte y no usa el emulador a propósito: el
+emulador de Storage acepta funciones que el servicio real no tiene (`firestore.
+exists`, por ejemplo), así que daba por buenas reglas que en producción
+rechazaban todas las subidas. Evalúa el archivo con la API de Firebase Rules,
+la misma que corre en producción, sin subir ni tocar nada.
 
 El seed da de alta un email como super admin y miembro de los dos negocios. Por
 defecto es `demo@app-stock.test`; en el emulador el popup de Google deja entrar
