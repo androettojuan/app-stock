@@ -91,7 +91,8 @@ export function Miembros({ negocioId, usuario, puedeEditar = true }: Props) {
                 {m.email === usuario && <span className="tag">vos</span>}
               </td>
               <td data-label="Rol">{m.rol}</td>
-              <td className="acciones-fila">
+              <td className="celda-acciones">
+                <div className="acciones-fila">
                 {puedeEditar && (
                   <button
                     className="secundario"
@@ -102,6 +103,7 @@ export function Miembros({ negocioId, usuario, puedeEditar = true }: Props) {
                     Sacar
                   </button>
                 )}
+                </div>
               </td>
             </tr>
           ))}

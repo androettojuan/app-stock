@@ -166,6 +166,9 @@ th { color: var(--suave); font-weight: 500; font-size: 0.75rem; text-transform: 
 .num { text-align: right; }
 .negativo { color: var(--alerta); }
 tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
+/* El flex va en un div adentro de la celda: un <td> con display:flex deja de
+   ser celda de tabla y la fila se descuadra (la línea de abajo no la cubre). */
+.celda-acciones { width: 1%; white-space: nowrap; }
 .acciones-fila { display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center; }
 .acciones-fila button { padding: 0.3rem 0.55rem; font-size: 0.8rem; white-space: nowrap; }
 
@@ -522,14 +525,16 @@ input:disabled, select:disabled { opacity: 0.6; cursor: default; }
   .tabla-tarjetas td.celda-principal::before { content: none; }
   .tabla-tarjetas td.celda-principal .tag { margin-left: 0.4rem; }
 
-  .tabla-tarjetas td.acciones-fila {
+  /* En tarjeta, la celda de acciones ocupa el ancho y el flex va adentro. */
+  .tabla-tarjetas td.celda-acciones { display: block; width: auto; padding: 0; }
+  .tabla-tarjetas td.celda-acciones .acciones-fila {
     justify-content: stretch;
     gap: 0.4rem;
     padding-top: 0.6rem;
     margin-top: 0.4rem;
     border-top: 1px solid var(--borde);
   }
-  .tabla-tarjetas td.acciones-fila button { flex: 1; font-size: 0.85rem; padding: 0.45rem; }
+  .tabla-tarjetas td.celda-acciones .acciones-fila button { flex: 1; font-size: 0.85rem; padding: 0.45rem; }
 
   /* En la tarjeta, un dato que no cargaron directamente no se muestra: en la
      tabla de escritorio la celda sigue ahí para no descuadrar las columnas. */

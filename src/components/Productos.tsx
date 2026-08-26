@@ -197,7 +197,8 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
                 <td className={`num ${opcional(p.precio) ? '' : 'vacio-dato'}`} data-label="Precio">
                   {opcional(p.precio) ?? '—'}
                 </td>
-                <td className="acciones-fila">
+                <td className="celda-acciones">
+                  <div className="acciones-fila">
                   <button onClick={() => setDialogo({ tipo: 'movimiento', producto: p, movimiento: 'entrada' })}>
                     + Entrada
                   </button>
@@ -216,6 +217,7 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
                     </button>
                     <button className="peligro" onClick={() => borrar(p)}>Borrar</button>
                   </MenuAcciones>
+                  </div>
                 </td>
               </tr>
             ))}
