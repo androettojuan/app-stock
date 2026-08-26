@@ -48,6 +48,9 @@ export function TarjetaProducto({
             <span className={bajoMinimo ? 'negativo' : ''}>mín {p.minimo}</span>
           )}
           {!p.activo && <span>inactivo</span>}
+          {/* Va última y en una sola línea: el renglón está reservado para uno
+              solo, y si creciera descuadraría el alto de la tarjeta. */}
+          {p.categoria && <span className="tp-categoria">{p.categoria}</span>}
         </p>
       </div>
 

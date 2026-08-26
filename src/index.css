@@ -241,14 +241,19 @@ tr.alerta td:first-child { border-left: 3px solid var(--alerta); }
 .tp-leyenda { margin-left: 0.4rem; font-size: 0.75rem; font-weight: 400; color: var(--suave); }
 .tp-detalle {
   margin: 0.15rem 0 0;
-  /* El renglón se reserva aunque el producto no tenga precio ni mínimo. */
+  /* El renglón se reserva aunque el producto no tenga precio ni mínimo, y no
+     se parte en dos: el alto de la tarjeta depende de que sea uno solo. */
   min-height: 1.1rem;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: baseline;
   gap: 0.6rem;
   color: var(--suave);
   font-size: 0.85rem;
 }
+.tp-detalle > span { white-space: nowrap; }
+/* La categoría cede primero si el renglón no alcanza. */
+.tp-categoria { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .tp-foto {
   padding: 0;
