@@ -22,6 +22,7 @@ type Dialogo =
   | { tipo: 'editar'; producto: Producto }
   | { tipo: 'movimiento'; producto: Producto; movimiento: TipoMovimiento }
   | { tipo: 'precios'; producto: Producto; cantidad: number }
+  | { tipo: 'foto'; producto: Producto }
   | null
 
 /**
@@ -140,9 +141,18 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
             <tr key={p.id} className={p.stock <= p.minimo ? 'alerta' : ''}>
               <td className="celda-principal">
                 <div className="producto-nombre">
-                  {p.foto
-                    ? <img className="miniatura" src={p.foto} alt="" loading="lazy" />
-                    : <div className="miniatura vacia" aria-hidden="true" />}
+                  {p.foto ? (
+                    <button
+                      className="miniatura-boton"
+                      onClick={() => setDialogo({ tipo: 'foto', producto: p })}
+                      title="Ver la foto más grande"
+                      aria-label={`Ver la foto de ${p.nombre}`}
+                    >
+                      <img className="miniatura" src={p.foto} alt="" loading="lazy" />
+                    </button>
+                  ) : (
+                    <div className="miniatura vacia" aria-hidden="true" />
+                  )}
                   <div>
                     <strong>{p.nombre}</strong>
                     {p.categoria && <span className="tag">{p.categoria}</span>}
@@ -198,6 +208,11 @@ export function Productos({ negocioId, productos, usuario, config }: Props) {
               onRegistrar={mover}
               onCancelar={() => setDialogo(null)}
             />
+          ) : dialogo.tipo === 'foto' ? (
+            <figure className="foto-grande">
+              <img src={dialogo.producto.foto} alt={dialogo.producto.nombre} />
+              <figcaption>{dialogo.producto.nombre}</figcaption>
+            </figure>
           ) : dialogo.tipo === 'precios' ? (
             <FormPrecios
               producto={dialogo.producto}
