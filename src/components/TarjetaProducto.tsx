@@ -1,15 +1,13 @@
-import type { ConfigNegocio, Producto } from '../types'
+import type { Producto } from '../types'
 import { importeOpcional, sinCargar } from '../formato'
 import { estaBajoMinimo } from '../stock'
 import { MenuAcciones } from './MenuAcciones'
 
 interface Props {
   producto: Producto
-  config: ConfigNegocio
   onEntrada: () => void
   onRetiro: () => void
   onEditar: () => void
-  onAjustar: () => void
   onBorrar: () => void
   onVerFoto: () => void
 }
@@ -20,17 +18,15 @@ interface Props {
  */
 export function TarjetaProducto({
   producto: p,
-  config,
   onEntrada,
   onRetiro,
   onEditar,
-  onAjustar,
   onBorrar,
   onVerFoto,
 }: Props) {
   const stock = p.stock ?? 0
   const bajoMinimo = estaBajoMinimo(p)
-  const precio = importeOpcional(p.precio, config.moneda)
+  const precio = importeOpcional(p.precio)
 
   return (
     <article className={`tarjeta-producto ${bajoMinimo ? 'alerta' : ''}`}>
@@ -38,8 +34,15 @@ export function TarjetaProducto({
         {/* Hasta dos líneas, y el alto se reserva aunque el nombre sea corto:
             si no, la tarjeta cambia de alto según el largo del nombre. */}
         <h3>{p.nombre}</h3>
+        {/* La categoría va como etiqueta debajo del nombre, igual que en la
+            tabla. El renglón se reserva para que el producto sin categoría no
+            achique la tarjeta. */}
+        <p className="tp-categoria">
+          {p.categoria && <span className="tag">{p.categoria}</span>}
+          {p.proveedor && <span className="proveedor">{p.proveedor}</span>}
+        </p>
         <p className="tp-stock">
-          <strong>{stock}</strong> {p.unidad}
+          <strong>{stock}</strong>
           <span className="tp-leyenda">en stock</span>
         </p>
         <p className="tp-detalle">
@@ -48,9 +51,6 @@ export function TarjetaProducto({
             <span className={bajoMinimo ? 'negativo' : ''}>mín {p.minimo}</span>
           )}
           {!p.activo && <span>inactivo</span>}
-          {/* Va última y en una sola línea: el renglón está reservado para uno
-              solo, y si creciera descuadraría el alto de la tarjeta. */}
-          {p.categoria && <span className="tp-categoria">{p.categoria}</span>}
         </p>
       </div>
 
@@ -78,7 +78,6 @@ export function TarjetaProducto({
         </button>
         <MenuAcciones etiqueta={`Más acciones de ${p.nombre}`}>
           <button onClick={onEditar}>Editar</button>
-          <button onClick={onAjustar}>Ajustar stock</button>
           <button className="peligro" onClick={onBorrar}>Borrar</button>
         </MenuAcciones>
       </div>

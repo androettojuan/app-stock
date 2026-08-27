@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useTema } from './hooks/useTema'
+import { useEsMovil } from './hooks/useEsMovil'
 import { configDe, escucharNegocio, negociosDelUsuario } from './data/negocios'
 import { crearNegocio, esSuperAdmin } from './data/admin'
 import { escucharProductos } from './data/productos'
@@ -11,7 +12,15 @@ import { Productos } from './components/Productos'
 import { Movimientos } from './components/Movimientos'
 import { Configuracion } from './components/Configuracion'
 import { MenuUsuario } from './components/MenuUsuario'
-import { IconoCambiar, IconoEngranaje, IconoLuna, IconoMas, IconoSalir, IconoSol } from './components/iconos'
+import {
+  IconoCambiar,
+  IconoEngranaje,
+  IconoHistorial,
+  IconoLuna,
+  IconoMas,
+  IconoSalir,
+  IconoSol,
+} from './components/iconos'
 import { FormNegocio } from './components/FormNegocio'
 import { Modal } from './components/Modal'
 import { usaEmulador } from './firebase/config'
@@ -21,18 +30,24 @@ const CLAVE_NEGOCIO = 'stockia:negocio'
 /** Se llamaba app-stock: se lee una vez para no perder el negocio elegido. */
 const CLAVE_NEGOCIO_VIEJA = 'app-stock:negocio'
 
-type Solapa = 'productos' | 'movimientos'
+/** Productos es el día a día; a las otras dos se entra desde el menú. */
+type Vista = 'productos' | 'movimientos' | 'configuracion'
 
 export default function App() {
   const { usuario, cargando, entrar, salir } = useAuth()
   const { tema, alternar } = useTema()
+  // En la computadora entran las solapas de siempre; en el teléfono no, y
+  // Movimientos se pasa al menú.
+  const esMovil = useEsMovil()
   const [negocios, setNegocios] = useState<Negocio[] | null>(null)
   const [negocio, setNegocio] = useState<Negocio | null>(null)
   const [productos, setProductos] = useState<Producto[]>([])
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
-  const [solapa, setSolapa] = useState<Solapa>('productos')
-  // La configuración es una pantalla aparte, no una solapa más del día a día.
-  const [enConfig, setEnConfig] = useState(false)
+  const [vista, setVista] = useState<Vista>('productos')
+  // La configuración avisa si hay cambios sin guardar, así que le preguntamos a
+  // ella antes de sacarla del medio, y recordamos adónde iba el usuario.
+  const salirDeConfig = useRef(() => setVista('productos'))
+  const destino = useRef<Vista>('productos')
   const [superAdmin, setSuperAdmin] = useState(false)
   const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [error, setError] = useState('')
@@ -87,13 +102,21 @@ export default function App() {
     const nuevo = { id, nombre: datos.nombre, rubro: datos.rubro, activo: true, rol: 'admin' as const }
     setNegocios((lista) => [...(lista ?? []), nuevo])
     setNegocio(nuevo)
-    setSolapa('productos')
-    setEnConfig(false)
+    setVista('productos')
     setCreandoNegocio(false)
   }
 
+  function irA(destinoNuevo: Vista) {
+    if (vista === 'configuracion' && destinoNuevo !== 'configuracion') {
+      destino.current = destinoNuevo
+      salirDeConfig.current()
+    } else {
+      setVista(destinoNuevo)
+    }
+  }
+
   function cambiarNegocio() {
-    setEnConfig(false)
+    setVista('productos')
     localStorage.removeItem(CLAVE_NEGOCIO)
     setNegocio(null)
     setProductos([])
@@ -110,11 +133,11 @@ export default function App() {
         <MenuUsuario email={usuario.email ?? ''}>
           {negocio && (
             <button
-              className={`secundario icono ${enConfig ? 'activo' : ''}`}
-              onClick={() => setEnConfig((v) => !v)}
+              className={`secundario icono ${vista === 'configuracion' ? 'activo' : ''}`}
+              onClick={() => irA(vista === 'configuracion' ? 'productos' : 'configuracion')}
               title="Configuración del negocio"
               aria-label="Configuración del negocio"
-              aria-pressed={enConfig}
+              aria-pressed={vista === 'configuracion'}
             >
               <IconoEngranaje /><span className="etiqueta">Configuración</span>
             </button>
@@ -130,9 +153,18 @@ export default function App() {
           </button>
           {/* El alta va acá y no solo en el selector: con un negocio único no
               se pasa por esa pantalla y no habría por dónde crear otro. */}
+          {negocio && esMovil && (
+            <button
+              className="secundario"
+              onClick={() => irA(vista === 'movimientos' ? 'productos' : 'movimientos')}
+            >
+              <span className="solo-menu"><IconoHistorial /></span>
+              {vista === 'movimientos' ? 'Productos' : 'Movimientos'}
+            </button>
+          )}
           {superAdmin && (
             <button className="secundario" onClick={() => setCreandoNegocio(true)}>
-              <span className="solo-menu"><IconoMas /></span>Nuevo negocio
+              <span className="solo-menu"><IconoMas /></span>Agregar negocio
             </button>
           )}
           {negocio && negocios && negocios.length > 1 && (
@@ -159,29 +191,49 @@ export default function App() {
               onCrear={() => setCreandoNegocio(true)}
             />
           )
-      ) : enConfig ? (
+      ) : vista === 'configuracion' ? (
         <main>
-          <div className="config-encabezado">
-            <h2>Configuración</h2>
-            <button className="secundario" onClick={() => setEnConfig(false)}>Volver al stock</button>
-          </div>
           <Configuracion
             negocio={negocio}
             usuario={usuario.email ?? ''}
             puedeEditar={negocio.rol === 'admin' || superAdmin}
+            onVolver={() => setVista(destino.current)}
+            registrarSalida={(fn) => { salirDeConfig.current = fn }}
           />
         </main>
       ) : (
         <main>
-          <nav className="tabs">
-            <button className={solapa === 'productos' ? 'activo' : ''} onClick={() => setSolapa('productos')}>
-              Productos
-            </button>
-            <button className={solapa === 'movimientos' ? 'activo' : ''} onClick={() => setSolapa('movimientos')}>
-              Movimientos
-            </button>
-          </nav>
-          {solapa === 'productos' && (
+          {!esMovil && (
+            <nav className="tabs">
+              <button
+                className={vista === 'productos' ? 'activo' : ''}
+                onClick={() => setVista('productos')}
+              >
+                Productos
+              </button>
+              <button
+                className={vista === 'movimientos' ? 'activo' : ''}
+                onClick={() => setVista('movimientos')}
+              >
+                Movimientos
+              </button>
+            </nav>
+          )}
+
+          {vista === 'movimientos' ? (
+            <>
+              {/* En el teléfono no hay solapas: hace falta el título y la salida. */}
+              {esMovil && (
+                <div className="encabezado-pantalla">
+                  <h2>Movimientos</h2>
+                  <button className="secundario" onClick={() => setVista('productos')}>
+                    Volver al stock
+                  </button>
+                </div>
+              )}
+              <Movimientos movimientos={movimientos} />
+            </>
+          ) : (
             <Productos
               negocioId={negocio.id}
               productos={productos}
@@ -189,7 +241,6 @@ export default function App() {
               config={configDe(negocio)}
             />
           )}
-          {solapa === 'movimientos' && <Movimientos movimientos={movimientos} />}
         </main>
       )}
 

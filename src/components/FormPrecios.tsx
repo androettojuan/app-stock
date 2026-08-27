@@ -6,7 +6,6 @@ interface Props {
   producto: Producto
   /** Lo que acaba de entrar, que es el motivo por el que preguntamos. */
   cantidad: number
-  moneda: string
   onGuardar: (datos: { costo: number; precio: number }) => Promise<void>
   onCancelar: () => void
 }
@@ -15,7 +14,7 @@ interface Props {
  * Se ofrece después de una entrada grande: es cuando suele cambiar el costo de
  * reposición y conviene revisar el precio de venta.
  */
-export function FormPrecios({ producto, cantidad, moneda, onGuardar, onCancelar }: Props) {
+export function FormPrecios({ producto, cantidad, onGuardar, onCancelar }: Props) {
   const [costo, setCosto] = useState(producto.costo ?? 0)
   const [precio, setPrecio] = useState(producto.precio ?? 0)
   const [error, setError] = useState('')
@@ -39,7 +38,7 @@ export function FormPrecios({ producto, cantidad, moneda, onGuardar, onCancelar 
     <form className="form" onSubmit={onSubmit}>
       <h3>¿Actualizamos los precios?</h3>
       <p className="dato">
-        Entraron {cantidad} {producto.unidad} de <strong>{producto.nombre}</strong>. Si esta compra
+        Entraron {cantidad} de <strong>{producto.nombre}</strong>. Si esta compra
         vino a otro precio, es el momento de corregirlo.
       </p>
       <div className="fila">
@@ -66,7 +65,7 @@ export function FormPrecios({ producto, cantidad, moneda, onGuardar, onCancelar 
       <p className="dato">
         {margen === null
           ? 'Cargá costo y precio para ver el margen.'
-          : <>Margen: <strong>{margen}%</strong> · ganás {formatearImporte(precio - costo, moneda)} por {producto.unidad}.</>}
+          : <>Margen: <strong>{margen}%</strong> · ganás {formatearImporte(precio - costo)} por unidad.</>}
       </p>
       {error && <p className="error">{error}</p>}
       <div className="acciones">

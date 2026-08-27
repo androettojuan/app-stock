@@ -13,11 +13,10 @@ tema claro y oscuro: arranca según el sistema y se cambia con el botón ☾/☀
 ```
 superAdmins/{email}                      alta manual desde la consola
 negocios/{negocioId}                     { nombre, rubro, activo, creado,
-                                           config: { moneda, unidadDefecto,
-                                             minimoDefecto, categorias[],
-                                             unidades[] } }
+                                           config: { minimoDefecto,
+                                             categorias[], proveedores[] } }
 negocios/{negocioId}/miembros/{email}    { email, nombre?, rol, creado }
-negocios/{negocioId}/productos/{id}      { nombre, sku, categoria, unidad,
+negocios/{negocioId}/productos/{id}      { nombre, categoria?, proveedor?,
                                            stock, minimo, costo, precio, activo,
                                            foto? }
 
@@ -33,8 +32,12 @@ negocios/{negocioId}/movimientos/{id}    { productoId, nombre, tipo, cantidad,
   o baja miembros, desde el ⚙ del encabezado.
 - Super admin: crea y borra negocios, y puede todo en cualquiera. Al crear un
   negocio queda como miembro admin, si no nadie podría verlo.
+- Los importes van siempre en pesos: el negocio no elige moneda.
 - Costo y precio son opcionales: el producto que no los tenga cargados no los
   muestra en la lista, en vez de mostrar un importe en cero.
+- El stock nunca se escribe a mano: entra por «Entrada» o «Retirar», y si se
+  corrige desde la ficha del producto queda registrado como un ajuste, con la
+  diferencia contra lo que había.
 - Las reglas de Storage solo exigen sesión iniciada, tamaño y que sea imagen:
   no pueden consultar Firestore, así que no hay forma de verificar ahí la
   membresía. Lo que resguarda las fotos es que su ruta lleva dos ids aleatorios

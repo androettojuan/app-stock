@@ -16,7 +16,7 @@ export function SelectorNegocio({ negocios, onElegir, puedeCrear, onCrear }: Pro
         {puedeCrear ? (
           <>
             <p>Creá el primero para empezar a cargar productos.</p>
-            <button onClick={onCrear}>+ Negocio</button>
+            <button onClick={onCrear}>Agregar negocio</button>
           </>
         ) : (
           <p>Pedile al administrador que te agregue como miembro de un negocio.</p>
@@ -29,7 +29,7 @@ export function SelectorNegocio({ negocios, onElegir, puedeCrear, onCrear }: Pro
     <div className="selector">
       <div className="selector-titulo">
         <h2>Elegí el negocio</h2>
-        {puedeCrear && <button onClick={onCrear}>+ Negocio</button>}
+        {puedeCrear && <button onClick={onCrear}>Agregar negocio</button>}
       </div>
       <ul>
         {negocios.map((n) => (

@@ -1,20 +1,19 @@
 import { useState, type FormEvent } from 'react'
-import type { Producto, TipoMovimiento } from '../types'
+import type { Producto } from '../types'
 import type { AltaMovimiento } from '../data/movimientos'
 
 interface Props {
   producto: Producto
-  /** El tipo lo elige el botón de la lista: entrada, retiro o ajuste. */
-  tipo: TipoMovimiento
+  /** El tipo lo elige el botón de la lista. El ajuste se hace desde la ficha. */
+  tipo: 'entrada' | 'salida'
   usuario: string
   onRegistrar: (mov: AltaMovimiento) => Promise<void>
   onCancelar: () => void
 }
 
-const TITULOS: Record<TipoMovimiento, string> = {
+const TITULOS = {
   entrada: 'Entrada',
   salida: 'Retiro',
-  ajuste: 'Ajuste de stock',
 }
 
 export function FormMovimiento({ producto, tipo, usuario, onRegistrar, onCancelar }: Props) {
@@ -29,7 +28,7 @@ export function FormMovimiento({ producto, tipo, usuario, onRegistrar, onCancela
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    if (tipo !== 'ajuste' && cantidad <= 0) return setError('La cantidad tiene que ser mayor a cero')
+    if (cantidad <= 0) return setError('La cantidad tiene que ser mayor a cero')
     if (tipo === 'salida' && cantidad > stock) return setError(`No hay tanto stock: quedan ${stock}`)
     setError('')
     setGuardando(true)
@@ -54,23 +53,23 @@ export function FormMovimiento({ producto, tipo, usuario, onRegistrar, onCancela
   return (
     <form className="form" onSubmit={onSubmit}>
       <h3>{TITULOS[tipo]} — {producto.nombre}</h3>
-      <p className="dato">Stock actual: <strong>{stock} {producto.unidad}</strong></p>
+      <p className="dato">Stock actual: <strong>{stock}</strong></p>
       <label>
-        {tipo === 'ajuste' ? 'Stock real contado' : 'Cantidad'}
+        Cantidad
         <input
           type="number"
           step="any"
-          min={tipo === 'ajuste' ? undefined : 0}
+          min={0}
           value={cantidad}
           onChange={(e) => setCantidad(Number(e.target.value))}
           autoFocus
         />
       </label>
       {excede ? (
-        <p className="error">No hay tanto stock: quedan {stock} {producto.unidad}.</p>
-      ) : tipo !== 'ajuste' && cantidad > 0 ? (
+        <p className="error">No hay tanto stock: quedan {stock}.</p>
+      ) : cantidad > 0 ? (
         <p className="dato">
-          Queda en <strong>{tipo === 'entrada' ? stock + cantidad : stock - cantidad} {producto.unidad}</strong>.
+          Queda en <strong>{tipo === 'entrada' ? stock + cantidad : stock - cantidad}</strong>.
         </p>
       ) : null}
       <label>

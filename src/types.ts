@@ -14,23 +14,17 @@ export interface Negocio {
 
 /** Ajustes del negocio. Todo opcional: un negocio viejo sin `config` usa CONFIG_POR_DEFECTO. */
 export interface ConfigNegocio {
-  /** Código ISO de la moneda con que se muestran los importes. */
-  moneda: string
-  /** Unidad que viene puesta al cargar un producto nuevo. */
-  unidadDefecto: string
   /** Mínimo que viene puesto al cargar un producto nuevo. */
   minimoDefecto: number
   /** Sugerencias para no escribirlas a mano en cada producto. */
   categorias: string[]
-  unidades: string[]
+  proveedores: string[]
 }
 
 export const CONFIG_POR_DEFECTO: ConfigNegocio = {
-  moneda: 'ARS',
-  unidadDefecto: 'u',
   minimoDefecto: 0,
   categorias: [],
-  unidades: ['u', 'kg', 'l', 'm', 'caja'],
+  proveedores: [],
 }
 
 export interface Miembro {
@@ -44,9 +38,9 @@ export interface Producto {
   nombre: string
   /** URL de descarga de la foto en Storage, si le cargaron una. */
   foto?: string
-  sku?: string
   categoria?: string
-  unidad: string
+  /** A quién se le compra. Se elige de los cargados en la configuración. */
+  proveedor?: string
   stock: number
   minimo: number
   costo: number

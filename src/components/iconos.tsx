@@ -40,6 +40,14 @@ export function IconoMenu() {
   )
 }
 
+export function IconoHistorial() {
+  return (
+    <svg {...comunes}>
+      <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 5v4h4M12 7.5V12l3 1.8" />
+    </svg>
+  )
+}
+
 export function IconoMas() {
   return (
     <svg {...comunes}>

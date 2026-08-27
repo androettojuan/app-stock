@@ -17,9 +17,8 @@ interface Props {
 function vacio(config: ConfigNegocio): ProductoNuevo {
   return {
     nombre: '',
-    sku: '',
     categoria: '',
-    unidad: config.unidadDefecto,
+    proveedor: '',
     stock: 0,
     minimo: config.minimoDefecto,
     costo: 0,
@@ -134,10 +133,6 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
         </div>
       </div>
       <div className="fila">
-        <label>
-          SKU
-          <input value={datos.sku ?? ''} onChange={(e) => campo('sku', e.target.value)} />
-        </label>
         <CampoConOpciones
           etiqueta="Categoría"
           valor={datos.categoria ?? ''}
@@ -147,25 +142,30 @@ export function FormProducto({ producto, config, onGuardar, onCancelar }: Props)
           vacio="Sin categoría"
         />
         <CampoConOpciones
-          etiqueta="Unidad"
-          valor={datos.unidad}
-          opciones={config.unidades}
-          onCambiar={(v) => campo('unidad', v)}
-          placeholder="u, kg, caja…"
+          etiqueta="Proveedor"
+          valor={datos.proveedor ?? ''}
+          opciones={config.proveedores}
+          onCambiar={(v) => campo('proveedor', v)}
+          placeholder="nombre del proveedor"
+          vacio="Sin proveedor"
+          textoOtra="Otro…"
         />
       </div>
-      <div className="fila">
-        {!producto && (
-          <label>
-            Stock inicial
-            <input
-              type="number"
-              step="any"
-              value={datos.stock}
-              onChange={(e) => campo('stock', Number(e.target.value))}
-            />
-          </label>
-        )}
+      <div className="fila numeros">
+        <label>
+          {producto ? 'Stock' : 'Stock inicial'}
+          <input
+            type="number"
+            step="any"
+            value={datos.stock}
+            onChange={(e) => campo('stock', Number(e.target.value))}
+          />
+          {/* Corregirlo acá no es lo mismo que escribirlo: queda un movimiento
+              de ajuste, igual que si se usara "Ajustar stock". */}
+          {producto && datos.stock !== producto.stock && (
+            <span className="ayuda">Se registra como ajuste</span>
+          )}
+        </label>
         <label>
           Mínimo
           <input

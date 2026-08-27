@@ -27,9 +27,9 @@ const NEGOCIOS = [
     nombre: 'Kiosco Centro',
     rubro: 'Kiosco',
     productos: [
-      { nombre: 'Coca 500ml', sku: 'COCA500', categoria: 'Bebidas', unidad: 'u', stock: 24, minimo: 6, costo: 900, precio: 1500 },
-      { nombre: 'Alfajor triple', sku: 'ALF3', categoria: 'Golosinas', unidad: 'u', stock: 4, minimo: 10, costo: 700, precio: 1200 },
-      { nombre: 'Agua sin gas 1.5L', sku: 'AGUA15', categoria: 'Bebidas', unidad: 'u', stock: 12, minimo: 6, costo: 800, precio: 1300 },
+      { nombre: 'Coca 500ml', categoria: 'Bebidas', stock: 24, minimo: 6, costo: 900, precio: 1500 },
+      { nombre: 'Alfajor triple', categoria: 'Golosinas', stock: 4, minimo: 10, costo: 700, precio: 1200 },
+      { nombre: 'Agua sin gas 1.5L', categoria: 'Bebidas', stock: 12, minimo: 6, costo: 800, precio: 1300 },
     ],
   },
   {
@@ -37,8 +37,8 @@ const NEGOCIOS = [
     nombre: 'Ferretería Sur',
     rubro: 'Ferretería',
     productos: [
-      { nombre: 'Tornillo 3x25', sku: 'T325', categoria: 'Tornillería', unidad: 'u', stock: 500, minimo: 100, costo: 30, precio: 80 },
-      { nombre: 'Silicona neutra', sku: 'SIL1', categoria: 'Adhesivos', unidad: 'u', stock: 8, minimo: 4, costo: 3500, precio: 6200 },
+      { nombre: 'Tornillo 3x25', categoria: 'Tornillería', stock: 500, minimo: 100, costo: 30, precio: 80 },
+      { nombre: 'Silicona neutra', categoria: 'Adhesivos', stock: 8, minimo: 4, costo: 3500, precio: 6200 },
     ],
   },
 ]
@@ -64,8 +64,9 @@ for (const negocio of NEGOCIOS) {
   await ref.collection('miembros').doc(EMAIL).set({ email: EMAIL, rol: 'admin', creado: new Date() })
 
   for (const p of negocio.productos) {
-    // Id fijo por SKU: correr el seed dos veces no duplica productos.
-    await ref.collection('productos').doc(p.sku).set({ ...p, activo: true, actualizado: new Date() })
+    // Id fijo por nombre: correr el seed dos veces no duplica productos.
+    const id = p.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    await ref.collection('productos').doc(id).set({ ...p, activo: true, actualizado: new Date() })
   }
   console.log(`✓ ${negocio.nombre}: ${negocio.productos.length} productos`)
 }
