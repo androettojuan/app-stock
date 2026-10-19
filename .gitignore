@@ -28,3 +28,6 @@ dist-ssr
 .firebase/
 *-debug.log
 .firebaserc
+
+# Pantallas sueltas de npm run capturas (el README usa las composiciones)
+docs/capturas/pantallas/
